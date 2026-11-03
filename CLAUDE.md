@@ -126,7 +126,8 @@ lombard/
 ### Команды (заполняются по мере появления)
 ```bash
 # backend
-cd backend && pip install -e ".[dev]" && uvicorn app.main:app --reload   # http://localhost:8000/docs
+cd backend && pip install -e ".[dev]" && uvicorn app.main:app --reload   # http://localhost:8000/api/docs
+cd backend && alembic upgrade head && python -m app.seed                  # схема БД + демо-данные (make db)
 cd backend && pytest
 # frontend
 cd frontend && npm install && npm run dev                                 # http://localhost:5173

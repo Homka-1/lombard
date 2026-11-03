@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.router import api_router
 from app.core.config import Settings, get_settings
+from app.core.db import make_engine, make_session_factory
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -18,6 +19,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         redoc_url=None,
     )
     app.state.settings = settings
+    app.state.engine = make_engine(settings.database_url, echo=settings.db_echo)
+    app.state.session_factory = make_session_factory(app.state.engine)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,

@@ -20,6 +20,7 @@ class Settings(BaseSettings):
 
     api_prefix: str = "/api"
     database_url: str = "sqlite:///./lombard.db"
+    db_echo: bool = False
     upload_dir: str = "./uploads"
 
     # JWT (used from stage 4). Must be overridden outside development.
@@ -33,6 +34,9 @@ class Settings(BaseSettings):
     # Region: Kazakhstan. All money is stored in tiyn (1 KZT = 100 tiyn), dates in UTC.
     currency: str = "KZT"
     timezone: str = "Asia/Almaty"
+
+    # Loan rules (stage 8): grace period after the due date before FORFEITED.
+    grace_period_days: int = 30
 
 
 @lru_cache

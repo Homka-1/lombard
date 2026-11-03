@@ -3,6 +3,7 @@ def test_health_ok(client):
     assert resp.status_code == 200
     body = resp.json()
     assert body["status"] == "ok"
+    assert body["database"] == "ok"
     assert body["environment"] == "test"
     assert body["currency"] == "KZT"
     assert body["time"].endswith("Z") or "+00:00" in body["time"]

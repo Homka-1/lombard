@@ -20,7 +20,8 @@
 
 ## Быстрый старт
 
-Linux/macOS: `make install`, затем в двух терминалах `make backend` и `make frontend`.
+Linux/macOS: `make install`, `make db` (миграции + демо-данные), затем в двух терминалах
+`make backend` и `make frontend`.
 Или вручную:
 
 ### Backend
@@ -31,6 +32,8 @@ python3 -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
 cp .env.example .env               # необязательно: значения по умолчанию подходят для разработки
+alembic upgrade head               # создать/обновить схему БД (SQLite: backend/lombard.db)
+python -m app.seed                 # справочники и демо-аккаунты (можно запускать повторно)
 uvicorn app.main:app --reload
 ```
 
@@ -65,13 +68,37 @@ cd frontend && npm test && npm run lint && npm run format:check && npm run build
 | Переменная | По умолчанию | Назначение |
 |-----------|--------------|-----------|
 | `LOMBARD_ENVIRONMENT` | `development` | Название окружения |
-| `LOMBARD_DATABASE_URL` | `sqlite:///./lombard.db` | База данных (с этапа 3) |
+| `LOMBARD_DATABASE_URL` | `sqlite:///./lombard.db` | База данных (SQLAlchemy URL) |
+| `LOMBARD_DB_ECHO` | `false` | Печатать SQL-запросы в лог |
 | `LOMBARD_UPLOAD_DIR` | `./uploads` | Каталог для фото изделий (с этапа 5) |
 | `LOMBARD_SECRET_KEY` | `change-me-in-production` | Ключ подписи JWT (с этапа 4) |
 | `LOMBARD_CORS_ORIGINS` | `["http://localhost:5173","http://127.0.0.1:5173"]` | Разрешённые источники (JSON-список) |
 
 Регион — Казахстан: валюта KZT, суммы хранятся в тиынах, даты — в UTC.
 
+## База данных
+
+- Схема — миграции Alembic (`backend/alembic/versions/`). Новая миграция после изменения
+  моделей: `cd backend && alembic revision --autogenerate -m "описание"`, затем проверить
+  файл и `alembic upgrade head`. `alembic check` — убедиться, что модели и миграции совпадают.
+- Начать с чистой БД: удалить `backend/lombard.db` и выполнить `make db`.
+- Деньги хранятся целыми числами в тиынах (1 ₸ = 100 тиын), вес — в миллиграммах,
+  ставка — в базисных пунктах в день (25 = 0,25 % в день), даты — в UTC.
+
 ## Демо-аккаунты
 
-Появятся на этапе 3 (seed-данные).
+Создаются командой `python -m app.seed` (или `make seed`). Пароль у всех — **`demo1234`**
+(`python -m app.seed --reset-passwords` вернёт его, если поменяли).
+
+| Роль | E-mail | Имя | Телефон | Город |
+|------|--------|-----|---------|-------|
+| Клиент | `client@lombard.kz` | Айгерим Садыкова | +7 701 123-45-67 | Алматы |
+| Клиент | `client2@lombard.kz` | Данияр Ахметов | +7 777 123-45-68 | Астана |
+| Эксперт | `expert@lombard.kz` | Ерлан Касымов | +7 705 222-33-44 | Алматы |
+| Курьер | `courier@lombard.kz` | Нурлан Жумабаев | +7 747 555-66-77 | Алматы |
+| Курьер | `courier2@lombard.kz` | Асель Нурланова | +7 775 888-99-00 | Астана |
+| Администратор | `admin@lombard.kz` | Гульнара Беккожина | +7 727 300-10-20 | Алматы |
+
+Вход в приложение появится на этапе 4. У клиента `client@lombard.kz` есть черновик заявки.
+Справочники: 5 категорий (золото 80 %, серебро 70 %, платина 75 %, часы 60 %, электроника 50 %)
+и учебные цены металлов 999 пробы за грамм.
