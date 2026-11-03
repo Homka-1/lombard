@@ -2,7 +2,7 @@
 
 - **Статус:** ✅ завершён
 - **Дата:** 2026-11-03
-- **Коммит:** `COMMIT_SHA`
+- **Коммит:** `826fbc6`
 
 ## Учтено из прошлого этапа
 - По заметкам `stage-02.md`: в `pyproject.toml` добавлены `sqlalchemy>=2`, `alembic`;
@@ -89,8 +89,8 @@ rm -f lombard.db && .venv/bin/alembic upgrade head && .venv/bin/python -m app.se
 ```
 
 ## Результаты проверок
-- pytest: **45 прошло**, 0 упало (машина состояний — 30, модели — 10, миграции и seed — 6…
-  включая health/CORS из этапа 2).
+- pytest: **45 прошло**, 0 упало: машина состояний — 25, модели и сервис статусов — 10,
+  миграции и seed — 6, health/CORS — 4.
 - ruff check / ruff format --check: без замечаний.
 - `alembic upgrade head` на чистой БД, `alembic check` («No new upgrade operations»),
   `downgrade base` → `upgrade head` — успешно (вручную и в тестах).
