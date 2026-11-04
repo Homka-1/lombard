@@ -1,0 +1,136 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px 3px 8px;
+  border-radius: var(--radius-pill);
+  font: var(--type-caption);
+  letter-spacing: var(--type-caption-tracking);
+  white-space: nowrap;
+  background: var(--tone-neutral-bg);
+  color: var(--tone-neutral-fg);
+  --dot: var(--tone-neutral-dot);
+}
+
+.badge[data-tone="info"] {
+  background: var(--tone-info-bg);
+  color: var(--tone-info-fg);
+  --dot: var(--tone-info-dot);
+}
+.badge[data-tone="success"] {
+  background: var(--tone-success-bg);
+  color: var(--tone-success-fg);
+  --dot: var(--tone-success-dot);
+}
+.badge[data-tone="warning"] {
+  background: var(--tone-warning-bg);
+  color: var(--tone-warning-fg);
+  --dot: var(--tone-warning-dot);
+}
+.badge[data-tone="danger"] {
+  background: var(--tone-danger-bg);
+  color: var(--tone-danger-fg);
+  --dot: var(--tone-danger-dot);
+}
+.badge[data-tone="gold"] {
+  background: var(--tone-gold-bg);
+  color: var(--tone-gold-fg);
+  --dot: var(--tone-gold-dot);
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--dot);
+}
+
+.chip {
+  min-height: 32px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  font: var(--type-label);
+  cursor: pointer;
+}
+
+.chip:hover {
+  border-color: var(--color-line-strong);
+}
+
+.chip[aria-pressed="true"] {
+  background: var(--color-malachite-900);
+  border-color: var(--color-malachite-900);
+  color: var(--color-white);
+}
+
+.spinner {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--color-malachite-100);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 800ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.pageLoader {
+  display: grid;
+  place-items: center;
+  min-height: 50vh;
+}
+
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--tone-info-bg);
+  border-radius: var(--radius-md);
+  background: var(--tone-info-bg);
+  color: var(--text);
+  --accent: var(--tone-info-fg);
+}
+
+.alert[data-tone="success"] {
+  border-color: var(--tone-success-bg);
+  background: var(--tone-success-bg);
+  --accent: var(--tone-success-fg);
+}
+.alert[data-tone="warning"] {
+  border-color: var(--tone-warning-bg);
+  background: var(--tone-warning-bg);
+  --accent: var(--tone-warning-fg);
+}
+.alert[data-tone="danger"] {
+  border-color: var(--tone-danger-bg);
+  background: var(--tone-danger-bg);
+  --accent: var(--tone-danger-fg);
+}
+
+.alertIcon {
+  flex: none;
+  margin-top: 2px;
+  color: var(--accent);
+}
+
+.alertBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.alertTitle {
+  font: var(--type-small-strong);
+}
+
+.alertText {
+  font: var(--type-small);
+  color: var(--color-graphite-700);
+}

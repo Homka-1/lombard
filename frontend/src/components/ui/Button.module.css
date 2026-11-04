@@ -1,0 +1,113 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font: var(--type-button);
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--motion-fast) var(--motion-easing),
+    border-color var(--motion-fast) var(--motion-easing),
+    color var(--motion-fast) var(--motion-easing);
+}
+
+.button:focus-visible {
+  outline: var(--border-focus) solid var(--focus);
+  outline-offset: 2px;
+}
+
+.s {
+  min-height: 36px;
+  padding: 0 14px;
+}
+.m {
+  min-height: 44px;
+  padding: 0 20px;
+}
+.l {
+  min-height: 52px;
+  padding: 0 26px;
+}
+
+.block {
+  display: flex;
+  width: 100%;
+}
+
+.primary {
+  background: var(--primary);
+  color: var(--color-white);
+}
+.primary:hover {
+  background: var(--primary-hover);
+  color: var(--color-white);
+}
+
+.secondary {
+  background: var(--color-surface);
+  border-color: var(--color-line-strong);
+  color: var(--text);
+}
+.secondary:hover {
+  border-color: var(--color-graphite-500);
+  color: var(--text);
+}
+
+.ghost {
+  background: transparent;
+  color: var(--primary);
+  padding-inline: var(--space-2);
+}
+.ghost:hover {
+  background: var(--color-malachite-50);
+  color: var(--primary-hover);
+}
+
+.inverse {
+  background: var(--color-white);
+  color: var(--color-malachite-800);
+}
+.inverse:hover {
+  background: var(--color-malachite-50);
+  color: var(--color-malachite-900);
+}
+
+.danger {
+  background: var(--color-surface);
+  border-color: var(--color-danger-700);
+  color: var(--color-danger-700);
+}
+.danger:hover {
+  background: var(--color-danger-100);
+  color: var(--color-danger-700);
+}
+
+.button:disabled {
+  background: var(--color-surface-sunken);
+  border-color: transparent;
+  color: var(--color-graphite-400);
+  cursor: not-allowed;
+}
+
+.button[aria-busy="true"] {
+  cursor: progress;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 700ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

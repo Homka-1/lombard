@@ -11,9 +11,14 @@
     "test:watch": "vitest",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "design": "node scripts/build-design.mjs",
+    "design:check": "node scripts/build-design.mjs --check",
+    "typecheck": "tsc -b"
   },
   "dependencies": {
+    "@fontsource/golos-text": "^5.3.0",
+    "@fontsource/spectral": "^5.3.0",
     "@tanstack/react-query": "^5.105.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

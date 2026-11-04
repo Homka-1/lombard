@@ -152,7 +152,7 @@ export class Artboard {
 }
 
 // ---------- иконки (сетка 24×24, линии 1.75) ----------
-const ICONS = {
+export const ICONS = {
   camera: () => [
     { pts: [[3, 8], [7, 8], [9, 5], [15, 5], [17, 8], [21, 8], [21, 19], [3, 19]], closed: true },
     { pts: arc(12, 13, 3.6, 3.6, 0, 360, 28), closed: true },

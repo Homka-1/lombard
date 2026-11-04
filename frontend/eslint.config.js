@@ -16,4 +16,9 @@ export default tseslint.config(
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
     },
   },
+  {
+    // тестовые утилиты экспортируют и компоненты, и функции — fast refresh им не нужен
+    files: ["src/test/**", "**/*.test.{ts,tsx}"],
+    rules: { "react-refresh/only-export-components": "off" },
+  },
 );

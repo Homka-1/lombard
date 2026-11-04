@@ -29,7 +29,7 @@ test:
 
 lint:
 	cd backend && .venv/bin/ruff check . && .venv/bin/ruff format --check .
-	cd frontend && npm run lint && npm run format:check
+	cd frontend && npm run lint && npm run format:check && npm run design:check
 
 build:
 	cd frontend && npm run build

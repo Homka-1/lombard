@@ -49,14 +49,32 @@ npm run dev
 ```
 
 Откройте <http://localhost:5173>. Dev-сервер проксирует запросы `/api/*` на backend
-(`http://127.0.0.1:8000`, адрес меняется переменной `VITE_BACKEND_URL`). Если backend
-запущен, на странице появится «Сервер на связи».
+(`http://127.0.0.1:8000`, адрес меняется переменной `VITE_BACKEND_URL`) — backend должен
+быть запущен, иначе калькулятор и вход покажут ошибку связи.
+
+Что есть во фронтенде (этап 9):
+
+| Адрес | Экран |
+|-------|-------|
+| `/` | Лэндинг: герой с примером предоценки, «Как это работает», живой калькулятор займа (`POST /api/calculator`), «Что принимаем» (LTV из справочника), вопросы |
+| `/login`, `/register` | Вход (с подстановкой демо-аккаунтов) и регистрация клиента |
+| `/client`, `/expert`, `/courier`, `/admin` | Кабинеты с навигацией по роли; сами разделы — этапы 10–11 |
+
+Дизайн-токены и иконки генерируются из макета этапа 1 (`design/`):
+
+```bash
+cd frontend && npm run design         # tokens.json → src/styles/tokens.css, status.gen.ts, icons.gen.ts
+cd frontend && npm run design:check   # сверка: сгенерированные файлы не устарели
+```
+
+Иконкам нужны зависимости макета (`cd design && npm install`); результат закоммичен.
+Шрифты Spectral и Golos Text подключены из `@fontsource/*` (woff2, кириллица) — без CDN.
 
 ## Проверки
 
 ```bash
 cd backend && pytest && ruff check . && ruff format --check .
-cd frontend && npm test && npm run lint && npm run format:check && npm run build
+cd frontend && npm test && npm run lint && npm run format:check && npm run design:check && npm run build
 ```
 
 Или из корня: `make test`, `make lint`, `make build`.
@@ -266,6 +284,7 @@ uvicorn), работает только в `development`/`test` (или `LOMBARD
 | Курьер | `courier2@lombard.kz` | Асель Нурланова | +7 775 888-99-00 | Астана |
 | Администратор | `admin@lombard.kz` | Гульнара Беккожина | +7 727 300-10-20 | Алматы |
 
-Вход через API — см. раздел «Аутентификация». У клиента `client@lombard.kz` есть черновик заявки.
+Вход в браузере — <http://localhost:5173/login> (кнопки демо-аккаунтов подставляют e-mail и пароль),
+через API — см. раздел «Аутентификация». У клиента `client@lombard.kz` есть черновик заявки.
 Справочники: 5 категорий (золото 80 %, серебро 70 %, платина 75 %, часы 60 %, электроника 50 %)
 и учебные цены металлов 999 пробы за грамм.

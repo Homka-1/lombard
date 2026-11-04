@@ -1,0 +1,65 @@
+.hallmark {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  min-width: 74px;
+  height: 40px;
+  padding: 0 14px;
+  font: var(--type-hallmark);
+  letter-spacing: var(--type-hallmark-tracking);
+  font-variant-numeric: lining-nums;
+  color: var(--color-gold-500);
+}
+
+.hallmark > svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.hallmark[data-tone="silver"] {
+  color: var(--color-graphite-500);
+}
+
+.hallmark[data-tone="malachite"] {
+  color: var(--primary);
+}
+
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--color-graphite-900);
+  text-decoration: none;
+}
+
+.logo:hover {
+  color: var(--color-graphite-900);
+}
+
+.mark {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background: var(--primary);
+  color: var(--color-white);
+  font: var(--type-h4);
+}
+
+.word {
+  font: var(--type-logo);
+  letter-spacing: var(--type-logo-tracking);
+  white-space: nowrap;
+}
+
+.logo[data-inverse] {
+  color: var(--color-white);
+}
+
+.logo[data-inverse] .mark {
+  background: var(--color-white);
+  color: var(--primary);
+}

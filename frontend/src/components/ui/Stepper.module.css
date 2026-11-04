@@ -1,0 +1,80 @@
+.stepper {
+  display: flex;
+  gap: 0;
+}
+
+.step {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+/* линия до следующего шага */
+.step:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 13px;
+  left: 28px;
+  right: 0;
+  height: 1.5px;
+  background: var(--color-line);
+}
+
+.step[data-state="done"]:not(:last-child)::after {
+  background: var(--primary);
+}
+
+.marker {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1.5px solid var(--color-line-strong);
+  border-radius: 50%;
+  background: var(--color-surface);
+  font: var(--type-label);
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.step[data-state="done"] .marker,
+.step[data-state="current"] .marker {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--color-white);
+}
+
+.label {
+  font: var(--type-label);
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: var(--space-2);
+}
+
+.step[data-state="current"] .label {
+  color: var(--text);
+  font-weight: 600;
+}
+
+@media (max-width: 479px) {
+  .label {
+    display: none;
+  }
+  .step[data-state="current"] .label {
+    display: block;
+    position: absolute;
+    top: 34px;
+    left: 0;
+    overflow: visible;
+  }
+  .stepper {
+    padding-bottom: 22px;
+  }
+}
