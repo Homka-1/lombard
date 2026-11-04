@@ -28,3 +28,7 @@ class NotFoundError(Exception):
 
 class PayloadTooLargeError(Exception):
     """Upload exceeds limits (→ 413)."""
+
+
+class ForbiddenError(Exception):
+    """The user may not act on this entity (→ 403). Message is user-facing."""

@@ -4,6 +4,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, File, Query, Response, UploadFile, status
 
+from app.api.offer_views import offer_read
 from app.core.deps import (
     ApplicationReader,
     ClientUser,
@@ -13,9 +14,9 @@ from app.core.deps import (
     SessionDep,
     SettingsDep,
 )
-from app.domain.enums import ApplicationStatus
+from app.domain.enums import ApplicationStatus, OfferStatus, Role
 from app.domain.state_machine import STATUS_LABELS
-from app.models import Application, Photo, StatusHistory
+from app.models import Application, Photo, StatusHistory, User
 from app.schemas.application import (
     ApplicationCreate,
     ApplicationListItem,
@@ -27,7 +28,10 @@ from app.schemas.application import (
     PhotoRead,
     StatusHistoryRead,
 )
+from app.schemas.offer import UserBrief
+from app.schemas.review import DeclineBody
 from app.services import applications as svc
+from app.services import review
 from app.storage.photos import PhotoStorage, PhotoUrlSigner, PhotoVariant
 
 router = APIRouter(prefix="/applications", tags=["applications"])
@@ -64,8 +68,32 @@ def history_read(entry: StatusHistory) -> StatusHistoryRead:
     )
 
 
-def application_read(app: Application, signer: PhotoUrlSigner, max_photos: int) -> ApplicationRead:
+def available_actions(app: Application, viewer: User) -> list[str]:
+    """What `viewer` can do with the application right now (for the UI)."""
+    S = ApplicationStatus
+    actions: list[str] = []
+    if viewer.role is Role.CLIENT and app.client_id == viewer.id:
+        if svc.is_editable(app):
+            actions += ["edit", "submit"]
+        if app.status is S.DRAFT:
+            actions.append("delete")
+        offer = review.current_offer(app)
+        if app.status is S.OFFER_SENT and offer is not None and offer.status is OfferStatus.SENT:
+            actions += ["accept_offer", "decline_offer"]
+    elif viewer.role is Role.EXPERT:
+        if app.status is S.PRE_ESTIMATED:
+            actions.append("take")
+        elif app.status is S.UNDER_REVIEW and app.expert_id == viewer.id:
+            actions += ["send_offer", "request_info", "reject"]
+    return actions
+
+
+def application_read(
+    app: Application, signer: PhotoUrlSigner, max_photos: int, viewer: User
+) -> ApplicationRead:
     pre = svc.latest_auto_appraisal(app)
+    expert_appraisal = review.latest_expert_appraisal(app)
+    offer = review.current_offer(app)
     photos = sorted(app.photos, key=lambda p: p.position)
     return ApplicationRead(
         id=app.id,
@@ -90,6 +118,13 @@ def application_read(app: Application, signer: PhotoUrlSigner, max_photos: int) 
         max_photos=max_photos,
         photos=[photo_read(p, signer) for p in photos],
         pre_estimate=AppraisalRead.model_validate(pre) if pre else None,
+        client=UserBrief.model_validate(app.client),
+        expert=UserBrief.model_validate(app.expert) if app.expert else None,
+        expert_appraisal=(
+            AppraisalRead.model_validate(expert_appraisal) if expert_appraisal else None
+        ),
+        offer=offer_read(offer, review.local_today()) if offer else None,
+        actions=available_actions(app, viewer),
         history=[history_read(h) for h in sorted(app.history, key=lambda h: h.id)],
     )
 
@@ -153,7 +188,7 @@ def create_application(
     app = svc.create_application(session, user, data.model_dump())
     session.commit()
     app = svc.get_application(session, app.id, user)
-    return application_read(app, signer, settings.max_photos)
+    return application_read(app, signer, settings.max_photos, user)
 
 
 @router.get("/{application_id}", response_model=ApplicationRead, summary="Карточка заявки")
@@ -165,7 +200,7 @@ def get_application(
     settings: SettingsDep,
 ) -> ApplicationRead:
     app = svc.get_application(session, application_id, user)
-    return application_read(app, signer, settings.max_photos)
+    return application_read(app, signer, settings.max_photos, user)
 
 
 @router.patch(
@@ -184,7 +219,7 @@ def update_application(
     app = svc.get_application(session, application_id, user)
     svc.update_application(session, app, data.model_dump(exclude_unset=True))
     session.commit()
-    return application_read(app, signer, settings.max_photos)
+    return application_read(app, signer, settings.max_photos, user)
 
 
 @router.delete(
@@ -242,7 +277,7 @@ def upload_photos(
     except Exception:
         _delete_files(storage, keys)
         raise
-    return application_read(app, signer, settings.max_photos)
+    return application_read(app, signer, settings.max_photos, user)
 
 
 @router.delete(
@@ -263,7 +298,7 @@ def delete_photo(
     key = svc.delete_photo(session, app, photo_id)
     session.commit()
     storage.delete(key)
-    return application_read(app, signer, settings.max_photos)
+    return application_read(app, signer, settings.max_photos, user)
 
 
 @router.put(
@@ -282,7 +317,7 @@ def reorder_photos(
     app = svc.get_application(session, application_id, user)
     svc.reorder_photos(app, data.photo_ids)
     session.commit()
-    return application_read(app, signer, settings.max_photos)
+    return application_read(app, signer, settings.max_photos, user)
 
 
 @router.post(
@@ -302,4 +337,53 @@ def submit_application(
     app = svc.get_application(session, application_id, user)
     svc.submit_application(session, app, user, storage=storage, appraiser=appraiser)
     session.commit()
-    return application_read(app, signer, settings.max_photos)
+    return application_read(app, signer, settings.max_photos, user)
+
+
+# --- Offer decision (client) --------------------------------------------------------------
+
+
+@router.post(
+    "/{application_id}/offer/accept",
+    response_model=ApplicationRead,
+    summary="Принять предложение эксперта",
+    responses={409: {"description": "Нет действующего предложения или истёк срок"}},
+)
+def accept_offer(
+    application_id: int,
+    session: SessionDep,
+    user: ClientUser,
+    signer: PhotoSignerDep,
+    settings: SettingsDep,
+) -> ApplicationRead:
+    app = svc.get_application(session, application_id, user)
+    try:
+        review.accept_offer(session, app, user)
+    except review.OfferExpiredError:
+        session.commit()  # keep the expiry, then report the conflict
+        raise
+    session.commit()
+    return application_read(app, signer, settings.max_photos, user)
+
+
+@router.post(
+    "/{application_id}/offer/decline",
+    response_model=ApplicationRead,
+    summary="Отказаться от предложения",
+)
+def decline_offer(
+    application_id: int,
+    session: SessionDep,
+    user: ClientUser,
+    signer: PhotoSignerDep,
+    settings: SettingsDep,
+    data: DeclineBody | None = None,
+) -> ApplicationRead:
+    app = svc.get_application(session, application_id, user)
+    try:
+        review.decline_offer(session, app, user, data.reason if data else None)
+    except review.OfferExpiredError:
+        session.commit()
+        raise
+    session.commit()
+    return application_read(app, signer, settings.max_photos, user)

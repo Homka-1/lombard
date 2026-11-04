@@ -74,6 +74,7 @@ cd frontend && npm test && npm run lint && npm run format:check && npm run build
 | `LOMBARD_MAX_PHOTOS` | `6` | Максимум фото в заявке |
 | `LOMBARD_MAX_PHOTO_MB` | `10` | Максимальный размер одного фото, МБ |
 | `LOMBARD_PHOTO_URL_TTL_SECONDS` | `3600` | Срок действия подписанных ссылок на фото |
+| `LOMBARD_OFFER_TTL_HOURS` | `72` | Сколько часов клиент может принять предложение эксперта |
 | `LOMBARD_SECRET_KEY` | `dev-insecure-secret-…` | Ключ подписи JWT; вне `development`/`test` обязателен свой (32+ символа) |
 | `LOMBARD_ACCESS_TOKEN_TTL_MINUTES` | `30` | Время жизни access-токена |
 | `LOMBARD_REFRESH_TOKEN_TTL_DAYS` | `14` | Время жизни refresh-токена |
@@ -138,6 +139,36 @@ JWT: короткий access-токен (`Authorization: Bearer …`) и дол�
 
 Сценарий в Swagger: **Authorize** как `client@lombard.kz` → `GET /api/applications` (готовый
 черновик) → `POST …/photos` (1–6 фото) → `POST …/submit` → в ответе `pre_estimate`.
+
+## Экспертная оценка, предложение и калькулятор
+
+| Метод | Путь | Кто | Назначение |
+|-------|------|-----|-----------|
+| GET | `/api/expert/queue?scope=new\|mine\|all` | эксперт, админ (просмотр) | Очередь: `new` — ждут эксперта (старые первыми), `mine` — мои в работе, `all` — весь этап оценки |
+| POST | `/api/expert/applications/{id}/take` | эксперт | Взять в работу: `PRE_ESTIMATED → UNDER_REVIEW` |
+| POST | `/api/expert/applications/{id}/quote` | эксперт | Живой калькулятор условий (ничего не сохраняет) |
+| POST | `/api/expert/applications/{id}/offer` | эксперт | Экспертная оценка + условия займа → `OFFER_SENT` |
+| POST | `/api/expert/applications/{id}/need-info` | эксперт | Запросить фото/сведения → `NEED_INFO` (`{comment}`) |
+| POST | `/api/expert/applications/{id}/reject` | эксперт | Отклонить → `REJECTED` (`{reason}`) |
+| POST | `/api/applications/{id}/offer/accept` | клиент | Принять предложение → `OFFER_ACCEPTED` |
+| POST | `/api/applications/{id}/offer/decline` | клиент | Отказаться → `OFFER_DECLINED` (`{reason}` — необязательно) |
+| POST | `/api/calculator` | все | Публичный калькулятор: категория + стоимость **или** параметры изделия, срок |
+
+Действовать по заявке в работе может только взявший её эксперт (другим — 403), админ видит
+очередь, но не ставит оценки. В карточке заявки — `offer`, `expert_appraisal`, `expert`,
+`client` и `actions` (что может сделать текущий пользователь — для кнопок UI).
+
+**Калькулятор займа** (`app/domain/loan_calc.py`, чистые функции): сумма = рыночная стоимость
+× LTV, округление **вниз** до 100 ₸; проценты = сумма × ставка в день × дни (простые, с
+округлением до тиына); займ гасится одним платежом, «график» — сколько вернуть на 1, 7, 14, …
+день и в дату возврата; после срока — 30 дней льготного периода. Эксперт выбирает LTV
+не выше категории, ставку не выше ставки категории, срок в пределах категории. Предложение
+действует `LOMBARD_OFFER_TTL_HOURS` часов, затем истекает (заявка → `OFFER_DECLINED`).
+Календарные даты займа — по времени Казахстана (UTC+5).
+
+Сценарий в Swagger: клиент отправляет заявку → **Authorize** как `expert@lombard.kz` →
+`GET /api/expert/queue` → `POST …/take` → `POST …/offer`
+(`{"market_value": 11900000, "term_days": 30}`) → снова как клиент → `POST …/offer/accept`.
 
 ## Демо-аккаунты
 

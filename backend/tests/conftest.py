@@ -85,6 +85,19 @@ def auth_headers(client: TestClient, seeded: Session):
     return lambda who: login(client, emails[who])
 
 
+@pytest.fixture
+def h(auth_headers):
+    """Like `auth_headers`, but logs each role in only once per test."""
+    cache: dict[str, dict[str, str]] = {}
+
+    def get(who: str) -> dict[str, str]:
+        if who not in cache:
+            cache[who] = auth_headers(who)
+        return cache[who]
+
+    return get
+
+
 # --- Images for photo tests ---------------------------------------------------------------
 
 

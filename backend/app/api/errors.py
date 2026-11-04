@@ -10,6 +10,7 @@ from fastapi.responses import JSONResponse
 from app.domain.state_machine import InvalidTransitionError, TransitionForbiddenError
 from app.services.errors import (
     ConflictError,
+    ForbiddenError,
     NotFoundError,
     PayloadTooLargeError,
     ValidationProblems,
@@ -72,6 +73,10 @@ def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(ConflictError)
     async def _conflict(_request: Request, exc: ConflictError) -> JSONResponse:
         return JSONResponse({"detail": str(exc)}, status_code=status.HTTP_409_CONFLICT)
+
+    @app.exception_handler(ForbiddenError)
+    async def _forbidden_action(_request: Request, exc: ForbiddenError) -> JSONResponse:
+        return JSONResponse({"detail": str(exc)}, status_code=status.HTTP_403_FORBIDDEN)
 
     @app.exception_handler(NotFoundError)
     async def _not_found(_request: Request, exc: NotFoundError) -> JSONResponse:

@@ -7,6 +7,7 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.domain.enums import ApplicationStatus, AppraisalKind, ItemCondition, Metal, Role
+from app.schemas.offer import OfferRead, UserBrief
 
 MAX_REQUESTED_AMOUNT = 100_000_000_00  # 100 млн ₸
 
@@ -163,6 +164,16 @@ class ApplicationRead(BaseModel):
     max_photos: int
     photos: list[PhotoRead]
     pre_estimate: AppraisalRead | None = Field(description="Последняя автоматическая предоценка")
+    client: UserBrief
+    expert: UserBrief | None = Field(description="Эксперт, который ведёт заявку")
+    expert_appraisal: AppraisalRead | None = Field(description="Последняя экспертная оценка")
+    offer: OfferRead | None = Field(description="Последнее предложение (займ) по заявке")
+    actions: list[str] = Field(
+        description=(
+            "Действия, доступные текущему пользователю: edit, submit, delete, accept_offer, "
+            "decline_offer (клиент); take, send_offer, request_info, reject (эксперт)"
+        )
+    )
     history: list[StatusHistoryRead]
 
 

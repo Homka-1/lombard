@@ -31,6 +31,9 @@ class Settings(BaseSettings):
     max_photo_mb: int = 10
     photo_url_ttl_seconds: int = 3600
 
+    # Expert offer (stage 6): how long the client has to accept it.
+    offer_ttl_hours: int = 72
+
     # JWT. The secret must be overridden outside development/test.
     secret_key: str = DEFAULT_SECRET_KEY
     jwt_issuer: str = "lombard"

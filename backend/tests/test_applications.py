@@ -46,18 +46,6 @@ def upload(client: TestClient, headers: dict, app_id: int, *blobs: bytes, name: 
     return client.post(f"/api/applications/{app_id}/photos", files=files, headers=headers)
 
 
-@pytest.fixture
-def h(auth_headers: Headers) -> Headers:
-    cache: dict[str, dict[str, str]] = {}
-
-    def get(who: str) -> dict[str, str]:
-        if who not in cache:
-            cache[who] = auth_headers(who)
-        return cache[who]
-
-    return get
-
-
 # --- catalog ------------------------------------------------------------------------------
 
 
