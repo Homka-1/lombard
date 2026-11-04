@@ -12,6 +12,10 @@
  *   - все объекты макета (прямоугольники, эллипсы, ломаные, точечный текст),
  *     сгруппированные так же, как в SVG-превью.
  *
+ * Стиль плоский: сценарий не создаёт теней и других живых эффектов (Effect →
+ * Stylize). Глубина передаётся только обводкой 1pt, поэтому документ
+ * одинаково выглядит в любой версии Illustrator.
+ *
  * Шрифты: Spectral и Golos Text (лежат в design/fonts/, лицензия OFL) —
  * установите их в систему до запуска. Если шрифт не найден, текст остаётся
  * шрифтом по умолчанию, а в конце показывается список недостающих.
@@ -349,28 +353,6 @@
         }
         if (it.op !== undefined && it.op !== null) {
             item.opacity = it.op * 100;
-        }
-        if (it.shadow) {
-            applyShadow(item, tokens.shadow[it.shadow]);
-        }
-    }
-
-    // Тень — живой эффект «Adobe Drop Shadow». Если версия Illustrator его не
-    // поддерживает через сценарий, объект остаётся без тени.
-    function applyShadow(item, s) {
-        if (!s) {
-            return;
-        }
-        try {
-            var rgb = hexToRGB(s.color);
-            var xml = '<LiveEffect name="Adobe Drop Shadow"><Dict data="' +
-                'R horz ' + s.x + ' R vert ' + s.y + ' R blur ' + s.blur +
-                ' R opac ' + Math.round(s.opacity * 100) + ' I mode 2 I csrc 1 B usePSLBlur 1' +
-                ' R red ' + rgb.red + ' R green ' + rgb.green + ' R blue ' + rgb.blue +
-                ' I colr 1 R dark 100"/></LiveEffect>';
-            item.applyEffect(xml);
-        } catch (e) {
-            // без тени
         }
     }
 

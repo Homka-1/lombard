@@ -14,26 +14,27 @@ export default function adminDashboard() {
 
   // Боковая навигация
   ab.group('sidebar', () => {
-    ab.rect(0, 0, SB, 1100, { fill: 'malachite-950', name: 'sidebar-bg' });
-    logo(ab, 24, 26, { inverse: true });
+    ab.rect(0, 0, SB, 1100, { fill: 'surface', name: 'sidebar-bg' });
+    ab.line(SB, 0, SB, 1100, { stroke: 'line' });
+    logo(ab, 24, 26);
     const nav = [['chart', 'Обзор'], ['list', 'Заявки'], ['card', 'Займы'], ['truck', 'Курьеры'], ['users', 'Пользователи'], ['tag', 'Категории и ставки'], ['scale', 'Цены металлов']];
     nav.forEach(([ic, t], i) => {
       const ny = 104 + i * 48;
-      if (i === 0) ab.rect(12, ny - 10, SB - 24, 42, { r: 10, fill: 'malachite-800' });
-      icon(ab, ic, 28, ny - 1, 22, i === 0 ? 'gold-300' : 'malachite-300', 1.75, i === 0 ? 'malachite-800' : 'malachite-950');
-      ab.text(62, ny, t, i === 0 ? 'small-strong' : 'small', { fill: i === 0 ? 'white' : 'malachite-300' });
+      if (i === 0) ab.rect(12, ny - 10, SB - 24, 42, { r: 8, fill: 'surface-sunken' });
+      icon(ab, ic, 28, ny - 1, 22, i === 0 ? 'malachite-700' : 'graphite-500', 1.5, i === 0 ? 'surface-sunken' : 'surface');
+      ab.text(62, ny, t, i === 0 ? 'small-strong' : 'small', { fill: i === 0 ? 'graphite-900' : 'graphite-700' });
     });
-    ab.line(24, 1100 - 96, SB - 24, 1100 - 96, { stroke: 'malachite-800' });
-    ab.circle(44, 1100 - 52, 18, { fill: 'malachite-800' });
-    ab.text(44, 1100 - 62, 'ДН', 'small-strong', { fill: 'gold-300', align: 'center' });
-    ab.text(72, 1100 - 70, 'Дана Нурланова', 'small-strong', { fill: 'white' });
-    ab.text(72, 1100 - 50, 'Администратор', 'caption', { fill: 'malachite-300' });
+    ab.line(24, 1100 - 96, SB - 24, 1100 - 96, { stroke: 'line' });
+    ab.circle(44, 1100 - 52, 18, { fill: 'surface-sunken' });
+    ab.text(44, 1100 - 62, 'ДН', 'small-strong', { fill: 'graphite-700', align: 'center' });
+    ab.text(72, 1100 - 70, 'Дана Нурланова', 'small-strong', { fill: 'text' });
+    ab.text(72, 1100 - 50, 'Администратор', 'caption', { fill: 'graphite-500' });
   });
 
   const X = SB + 48;
   const C = W - X - 48;
   let y = 40;
-  ab.text(X, y, 'Обзор', 'h1', { fill: 'malachite-950' });
+  ab.text(X, y, 'Обзор', 'h1', { fill: 'graphite-900' });
   ab.text(X, y + 60, 'Неделя 28 октября — 3 ноября', 'small', { fill: 'graphite-500' });
   segmented(ab, X + C - measure('СегодняНеделяМесяц', 'small-strong') - 92, y + 10, ['Сегодня', 'Неделя', 'Месяц'], 1);
   y += 112;
@@ -48,9 +49,9 @@ export default function adminDashboard() {
   const kw = (C - 3 * 20) / 4;
   kpis.forEach(([t, v, s, tone, d], i) => {
     const kx = X + i * (kw + 20);
-    card(ab, kx, y, kw, 148, { r: 16 });
+    card(ab, kx, y, kw, 148);
     ab.text(kx + 24, y + 22, t, 'small', { fill: 'graphite-500' });
-    ab.text(kx + 24, y + 48, v, 'amount-l', { fill: tone === 'warn' ? 'danger-700' : 'malachite-950' });
+    ab.text(kx + 24, y + 48, v, 'amount-l', { fill: tone === 'warn' ? 'danger-700' : 'graphite-900' });
     ab.text(kx + 24, y + 98, s, 'caption', { fill: 'graphite-500' });
     if (d) ab.text(kx + 24, y + 116, d, 'caption', { fill: 'success-700' });
   });
@@ -59,7 +60,7 @@ export default function adminDashboard() {
   // График выдач по дням (одна серия — без легенды, заголовок называет её)
   const CW = Math.round(C * 0.62);
   ab.group('chart-issued', () => {
-    card(ab, X, y, CW, 380, { r: 16 });
+    card(ab, X, y, CW, 380);
     ab.text(X + 28, y + 24, 'Выдано по дням, млн ₸', 'h4');
     const days = [['Пн', 2.1], ['Вт', 2.6], ['Ср', 2.4], ['Чт', 3.1], ['Пт', 3.8], ['Сб', 2.5], ['Вс', 1.9]];
     const px = X + 64;
@@ -77,7 +78,7 @@ export default function adminDashboard() {
     days.forEach(([d, v], i) => {
       const bx = px + i * slot + (slot - bw) / 2;
       const h = (v / max) * ph;
-      bar(ab, bx, base, bw, h, i === 4 ? 'malachite-700' : 'malachite-300');
+      bar(ab, bx, base, bw, h, i === 4 ? 'malachite-700' : 'malachite-100');
       ab.text(bx + bw / 2, base + 10, d, 'caption', { fill: 'graphite-500', align: 'center' });
       if (i === 4) {
         ab.text(bx + bw / 2, base - h - 24, '3,8', 'small-strong', { fill: 'text', align: 'center' });
@@ -86,16 +87,16 @@ export default function adminDashboard() {
     // тултип при наведении на четверг
     const tx = px + 3 * slot + slot / 2;
     const th = (3.1 / max) * ph;
-    ab.rect(tx - 150, base - th - 72, 152, 56, { r: 8, fill: 'malachite-950', shadow: 'raised' });
-    ab.text(tx - 138, base - th - 64, 'Четверг, 31 октября', 'caption', { fill: 'malachite-300' });
-    ab.text(tx - 138, base - th - 44, '3,1 млн ₸, 33 займа', 'small-strong', { fill: 'white' });
+    ab.rect(tx - 150, base - th - 72, 152, 56, { r: 6, fill: 'surface', stroke: 'line-strong' });
+    ab.text(tx - 138, base - th - 64, 'Четверг, 31 октября', 'caption', { fill: 'graphite-500' });
+    ab.text(tx - 138, base - th - 44, '3,1 млн ₸, 33 займа', 'small-strong', { fill: 'text' });
   });
 
   // Заявки по этапам
   const FX = X + CW + 20;
   const FW = C - CW - 20;
   ab.group('funnel', () => {
-    card(ab, FX, y, FW, 380, { r: 16 });
+    card(ab, FX, y, FW, 380);
     ab.text(FX + 28, y + 24, 'Заявки по этапам', 'h4');
     const rows = [['Предоценка', 64], ['У эксперта', 12], ['Предложение', 28], ['Курьер', 17], ['Осмотр', 9], ['Деньги выданы', 41]];
     const max = 64;
@@ -105,7 +106,7 @@ export default function adminDashboard() {
       ab.text(FX + 28, ry, t, 'small', { fill: 'graphite-700' });
       ab.text(FX + FW - 28, ry, String(v), 'small-strong', { fill: 'text', align: 'right' });
       ab.rect(FX + 28, ry + 24, bwMax, 6, { r: 3, fill: 'surface-sunken' });
-      ab.rect(FX + 28, ry + 24, (v / max) * bwMax, 6, { r: 3, fill: 'malachite-600' });
+      ab.rect(FX + 28, ry + 24, (v / max) * bwMax, 6, { r: 3, fill: 'malachite-700' });
     });
   });
   y += 380 + 24;
@@ -113,7 +114,7 @@ export default function adminDashboard() {
   // Назначение курьеров + цены металлов
   const AW = Math.round(C * 0.62);
   ab.group('assign', () => {
-    const ac = card(ab, X, y, AW, 300, { r: 16 });
+    const ac = card(ab, X, y, AW, 300);
     ab.text(X + 28, y + 24, 'Ждут курьера', 'h4');
     ab.text(X + AW - 28, y + 26, 'Назначить автоматически', 'small-strong', { fill: 'malachite-700', align: 'right' });
     const cols = [['Заявка', 0], ['Адрес и время', 120], ['Курьер', 400]];
@@ -142,7 +143,7 @@ export default function adminDashboard() {
   });
 
   ab.group('metals', () => {
-    card(ab, FX, y, FW, 316, { r: 16 });
+    card(ab, FX, y, FW, 316);
     ab.text(FX + 28, y + 24, 'Цены металлов, ₸ за грамм', 'h4');
     ab.text(FX + 28, y + 50, 'Обновлено сегодня в 09:00', 'caption', { fill: 'graphite-500' });
     const rows = [['Золото 999', '41 850', '+0,6 %'], ['Золото 585', '24 480', '+0,6 %'], ['Серебро 925', '465', '−0,2 %'], ['Платина 950', '15 320', '+0,1 %']];

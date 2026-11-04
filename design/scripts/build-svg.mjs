@@ -22,16 +22,11 @@ function fontFaces() {
   }
   return out.join('\n');
 }
-function filters() {
-  return Object.entries(tokens.shadow).map(([k, s]) =>
-    `<filter id="sh-${k}" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="${s.x}" dy="${s.y}" stdDeviation="${s.blur / 2}" flood-color="${s.color}" flood-opacity="${s.opacity}"/></filter>`).join('');
-}
 function common(it) {
   let a = ` fill="${color(it.fill)}"`;
   if (it.stroke && it.stroke !== 'none') a += ` stroke="${color(it.stroke)}" stroke-width="${it.sw}"`;
   if (it.dash) a += ` stroke-dasharray="${it.dash.join(' ')}"`;
   if (it.op != null) a += ` opacity="${it.op}"`;
-  if (it.shadow) a += ` filter="url(#sh-${it.shadow})"`;
   return a;
 }
 function render(it) {
@@ -66,7 +61,7 @@ for (const ab of mockup.artboards) {
 <svg xmlns="http://www.w3.org/2000/svg" width="${ab.w}" height="${ab.h}" viewBox="0 0 ${ab.w} ${ab.h}">
 <title>${esc(ab.title)}</title>
 <defs><style>${fontFaces()}
-text{font-kerning:normal;font-variant-numeric:lining-nums}</style>${filters()}</defs>
+text{font-kerning:normal;font-variant-numeric:lining-nums}</style></defs>
 <rect width="${ab.w}" height="${ab.h}" fill="${color(ab.bg)}"/>
 ${ab.items.map(render).join('\n')}
 </svg>

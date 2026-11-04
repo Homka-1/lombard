@@ -12,7 +12,7 @@ export default function clientWizard() {
   icon(ab, 'arrowLeft', X, y, 20, 'malachite-700');
   ab.text(X + 28, y, 'Мои заявки', 'small-strong', { fill: 'malachite-700' });
   y += 40;
-  ab.text(X, y, 'Новая заявка', 'h1', { fill: 'malachite-950' });
+  ab.text(X, y, 'Новая заявка', 'h1', { fill: 'graphite-900' });
   ab.text(X + 1200, y + 18, 'Черновик сохранён в 14:32', 'caption', { fill: 'graphite-500', align: 'right' });
   y += 92;
   stepper(ab, X + 14, y, 740, ['Изделие', 'Параметры', 'Фото', 'Проверка'], 2, { edgeAlign: true });
@@ -65,7 +65,7 @@ export default function clientWizard() {
         return;
       }
       photo(ab, tx, cy, tw, th, t.kind, { dark: t.dark, r: 10 });
-      if (t.state === 'dark') ab.rect(tx, cy, tw, th, { r: 10, fill: 'malachite-950', op: 0.45 });
+      if (t.state === 'dark') ab.rect(tx, cy, tw, th, { r: 8, fill: 'graphite-900', op: 0.35 });
       if (t.state === 'loading') {
         ab.rect(tx, cy, tw, th, { r: 10, fill: 'surface', op: 0.7 });
         ab.rect(tx + 12, cy + th / 2 - 2, tw - 24, 4, { r: 2, fill: 'line' });
@@ -81,8 +81,8 @@ export default function clientWizard() {
         ab.text(tx + tw - 14, cy + 6, '!', 'small-strong', { fill: 'white', align: 'center' });
       }
       if (i === 0) {
-        ab.rect(tx + 8, cy + th - 26, 58, 18, { r: 9, fill: 'malachite-900' });
-        ab.text(tx + 37, cy + th - 25, 'Главное', 'caption', { fill: 'white', align: 'center' });
+        ab.rect(tx + 8, cy + th - 26, 58, 18, { r: 4, fill: 'surface' });
+        ab.text(tx + 37, cy + th - 25, 'Главное', 'caption', { fill: 'graphite-700', align: 'center' });
       }
       if (t.label) ab.text(tx, cy + th + 8, t.label, 'caption', { fill: t.state === 'dark' ? 'warning-700' : 'graphite-700' });
     });
@@ -136,17 +136,17 @@ export default function clientWizard() {
   ab.text(RX + RW - 28, y + 28, 'Изменить', 'small-strong', { fill: 'malachite-700', align: 'right' });
 
   ry = y + 384;
-  card(ab, RX, ry, RW, 220, { r: 16, fill: 'malachite-900', stroke: 'none' });
-  ab.text(RX + 28, ry + 28, 'Проверка фото', 'h4', { fill: 'white' });
-  ab.text(RX + 28, ry + 54, 'Автоматически, до отправки эксперту', 'caption', { fill: 'malachite-300' });
+  card(ab, RX, ry, RW, 220);
+  ab.text(RX + 28, ry + 28, 'Проверка фото', 'h4');
+  ab.text(RX + 28, ry + 54, 'Автоматически, до отправки эксперту', 'caption', { fill: 'graphite-500' });
   const checks = [
-    ['check', 'malachite-300', 'Загружено 4 фото из 6'],
-    ['check', 'malachite-300', 'Клеймо 585 видно на фото 2'],
-    ['alert', 'gold-300', 'Фото 4 темнее нормы'],
+    ['check', 'success-700', 'Загружено 4 фото из 6'],
+    ['check', 'success-700', 'Клеймо 585 видно на фото 2'],
+    ['alert', 'warning-700', 'Фото 4 темнее нормы'],
   ];
   checks.forEach(([ic, c, t], i) => {
-    icon(ab, ic, RX + 28, ry + 92 + i * 36, 20, c, 2, 'malachite-900');
-    ab.text(RX + 60, ry + 92 + i * 36, t, 'small', { fill: 'white' });
+    icon(ab, ic, RX + 28, ry + 92 + i * 36, 20, c, 1.75);
+    ab.text(RX + 60, ry + 92 + i * 36, t, 'small', { fill: 'graphite-700' });
   });
 
   ab.h = Math.max(cy + 92 + 64, ry + 260);

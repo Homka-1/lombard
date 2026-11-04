@@ -1,5 +1,5 @@
 import {
-  Artboard, tokens, measure, logo, button, field, badge, stepper, hallmark, guilloche, rosette,
+  Artboard, tokens, measure, logo, button, field, badge, stepper, hallmark,
   icon, toast, card, segmented, slider, checkbox, chip, photo,
 } from '../kit.mjs';
 
@@ -13,11 +13,10 @@ export default function designSystem() {
 
   // Шапка листа
   ab.group('title', () => {
-    ab.rect(0, 0, W, 220, { fill: 'malachite-900' });
-    guilloche(ab, 760, 40, 640, 140, { color: 'gold-300', op: 0.28, lines: 8, periods: 5 });
-    logo(ab, X, 44, { inverse: true });
-    ab.text(X, 104, 'Дизайн-система', 'h1', { fill: 'white' });
-    ab.text(X, 166, 'Надёжность и ювелирная точность: малахит, клеймо пробы и гильоширная сетка залогового билета.', 'body', { fill: 'malachite-300' });
+    logo(ab, X, 44);
+    ab.text(X, 104, 'Дизайн-система', 'h1', { fill: 'graphite-900' });
+    ab.text(X, 166, 'Минимализм и точность: светлая бумага, графитовый текст, один акцентный цвет — малахит. Без теней: глубина — обводкой 1px.', 'body', { fill: 'graphite-500' });
+    ab.line(X, 219, W - X, 219, { stroke: 'line' });
   });
 
   // Палитра
@@ -26,7 +25,7 @@ export default function designSystem() {
   y += 60;
   const rows = [
     ['Малахит — основной цвет, действия и навигация', ['malachite-950', 'malachite-900', 'malachite-800', 'malachite-700', 'malachite-600', 'malachite-300', 'malachite-100', 'malachite-50']],
-    ['Проба — только металл, клеймо и фокус', ['gold-700', 'gold-500', 'gold-300', 'gold-100']],
+    ['Проба — только клеймо пробы и иллюстрации металла', ['gold-700', 'gold-500', 'gold-300', 'gold-100']],
     ['Бумага и графит — фон, текст, линии', ['paper', 'surface', 'surface-sunken', 'line', 'line-strong', 'graphite-400', 'graphite-500', 'graphite-700', 'graphite-900']],
     ['Статусы заявки', ['info-700', 'info-100', 'success-700', 'success-100', 'warning-700', 'warning-100', 'danger-700', 'danger-100']],
   ];
@@ -36,7 +35,7 @@ export default function designSystem() {
       y += 30;
       names.forEach((nm, i) => {
         const sx = X + i * 140;
-        ab.rect(sx, y, 128, 64, { r: 10, fill: nm, stroke: ['surface', 'paper', 'gold-100', 'malachite-50'].includes(nm) ? 'line' : 'none' });
+        ab.rect(sx, y, 128, 64, { r: 8, fill: nm, stroke: ['surface', 'paper', 'gold-100', 'malachite-50'].includes(nm) ? 'line' : 'none' });
         ab.text(sx, y + 72, nm, 'caption', { fill: 'graphite-700' });
         ab.text(sx, y + 88, tokens.color[nm], 'caption', { fill: 'graphite-500' });
       });
@@ -94,10 +93,10 @@ export default function designSystem() {
     bx += button(ab, bx, y + 4, 'Добавить фото', { variant: 'secondary', icon: 'camera' }).w + 16;
     bx += button(ab, bx, y + 8, 'Принять', { variant: 'primary', size: 's' }).w + 24;
     y += 76;
-    ab.rect(X, y, 560, 92, { r: 16, fill: 'malachite-900' });
+    ab.rect(X, y, 560, 92, { r: 12, fill: 'malachite-700' });
     button(ab, X + 24, y + 24, 'Получить деньги', { variant: 'inverse' });
-    ab.text(X + 220, y + 24, 'Кнопка на тёмном фоне —', 'small', { fill: 'malachite-300' });
-    ab.text(X + 220, y + 44, 'цвет пробы, а не малахит', 'small', { fill: 'malachite-300' });
+    ab.text(X + 220, y + 24, 'Кнопка на акцентном фоне —', 'small', { fill: 'malachite-100' });
+    ab.text(X + 220, y + 44, 'белая, без дополнительных цветов', 'small', { fill: 'malachite-100' });
   });
 
   // Поля
@@ -116,7 +115,7 @@ export default function designSystem() {
     checkbox(ab, FX + 304, y + 9, 'Есть документы и бирка', true);
     y += 64;
     ab.text(FX, y, 'Срок займа', 'label', { fill: 'graphite-700' });
-    ab.text(FX + 600, y, '30 дней', 'small-strong', { fill: 'malachite-900', align: 'right' });
+    ab.text(FX + 600, y, '30 дней', 'small-strong', { fill: 'graphite-900', align: 'right' });
     slider(ab, FX, y + 26, 600, 0.43);
   });
 
@@ -146,8 +145,8 @@ export default function designSystem() {
   y += 100;
 
   // Фирменные элементы
-  ab.text(X, y, 'Клеймо и гильош', 'h2');
-  ab.text(X + 330, y + 12, 'Клеймо отмечает оценку и пробу металла. Гильош — только на залоговом билете и тёмных плашках.', 'body', { fill: 'graphite-500' });
+  ab.text(X, y, 'Клеймо пробы', 'h2');
+  ab.text(X + 330, y + 12, 'Единственный фирменный элемент: тонкий восьмиугольник с пробой. Декоративных фонов нет.', 'body', { fill: 'graphite-500' });
   y += 72;
   ab.group('brand', () => {
     hallmark(ab, X + 50, y + 40, '585');
@@ -155,11 +154,9 @@ export default function designSystem() {
     hallmark(ab, X + 250, y + 40, '925', { color: 'graphite-500' });
     hallmark(ab, X + 370, y + 40, '92%', { w: 90, color: 'malachite-700' });
     ab.text(X, y + 84, 'Золото 585 и 750, серебро 925, уверенность оценки', 'caption', { fill: 'graphite-500' });
-    ab.rect(X + 470, y - 10, 400, 110, { r: 24, fill: 'malachite-900' });
-    guilloche(ab, X + 490, y + 5, 360, 80, { color: 'gold-300', op: 0.45 });
-    rosette(ab, X + 960, y + 45, 56, { color: 'gold-500', op: 0.7 });
-    photo(ab, X + 1060, y - 10, 110, 110, 'ring', { label: 'Фото 1' });
-    photo(ab, X + 1180, y - 10, 100, 110, 'watch', { dark: true });
+    photo(ab, X + 520, y - 10, 110, 110, 'ring', { label: 'Фото 1' });
+    photo(ab, X + 642, y - 10, 110, 110, 'watch');
+    photo(ab, X + 764, y - 10, 110, 110, 'stamp');
   });
   y += 150;
 
@@ -171,13 +168,13 @@ export default function designSystem() {
     ICON_NAMES.forEach((nm, i) => {
       const ix = X + (i % 10) * 60;
       const iy = y + Math.floor(i / 10) * 56;
-      ab.rect(ix, iy, 44, 44, { r: 10, fill: 'surface', stroke: 'line' });
-      icon(ab, nm, ix + 10, iy + 10, 24, 'malachite-800');
+      ab.rect(ix, iy, 44, 44, { r: 8, fill: 'surface', stroke: 'line' });
+      icon(ab, nm, ix + 10, iy + 10, 24, 'graphite-700', 1.5);
     });
   });
   toast(ab, 760, y, 380, 'Курьер вызван', 'Приедет завтра с 10:00 до 12:00', { tone: 'success' });
   card(ab, 760, y + 96, 600, 92);
-  icon(ab, 'shield', 784, y + 120, 28, 'malachite-700');
+  icon(ab, 'shield', 784, y + 120, 28, 'graphite-700', 1.5);
   ab.text(828, y + 116, 'Изделие застраховано на время перевозки', 'body-strong');
   ab.text(828, y + 140, 'Сумма страховки равна экспертной оценке', 'small', { fill: 'graphite-500' });
 

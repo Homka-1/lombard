@@ -6,8 +6,8 @@
 //   - scripts/build-svg.mjs          → previews/svg/*.svg → previews/*.png
 //   - illustrator/lombard-mockup.jsx → документ Adobe Illustrator
 // Поэтому здесь нельзя использовать ничего, что не умеет один из рендереров:
-// градиенты, маски, кривые Безье (только ломаные), размытие (кроме тени-эффекта
-// в SVG, которую Illustrator-скрипт пропускает).
+// градиенты, маски, кривые Безье (только ломаные), размытие и тени.
+// Стиль — плоский и минималистичный: глубина передаётся только обводкой 1px.
 
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -114,14 +114,14 @@ export class Artboard {
       t: 'rect', x: r2(x), y: r2(y), w: r2(w), h: r2(h),
       r: o.r || 0, fill: o.fill || 'none', stroke: o.stroke || 'none', sw: o.sw || 1,
       ...(o.op != null ? { op: o.op } : {}), ...(o.dash ? { dash: o.dash } : {}),
-      ...(o.shadow ? { shadow: o.shadow } : {}), ...(o.name ? { name: o.name } : {}),
+      ...(o.name ? { name: o.name } : {}),
     });
   }
   ellipse(cx, cy, rx, ry, o = {}) {
     return this.push({
       t: 'ellipse', x: r2(cx - rx), y: r2(cy - ry), w: r2(rx * 2), h: r2(ry * 2),
       fill: o.fill || 'none', stroke: o.stroke || 'none', sw: o.sw || 1,
-      ...(o.op != null ? { op: o.op } : {}), ...(o.shadow ? { shadow: o.shadow } : {}),
+      ...(o.op != null ? { op: o.op } : {}),
     });
   }
   circle(cx, cy, r, o) {
@@ -270,53 +270,8 @@ export function icon(ab, name, x, y, size = 24, color = 'text', sw = 1.75, bg = 
   });
 }
 
-// ---------- гильош и розетка (ювелирная точность) ----------
-// Сетка из синусоидальных лент, как защитный фон банкноты / залогового билета.
-export function guilloche(ab, x, y, w, h, o = {}) {
-  const color = o.color || 'gold-500';
-  const lines = o.lines || 9;
-  const periods = o.periods || 6;
-  const op = o.op ?? 0.35;
-  const steps = Math.max(40, Math.round(w / 5));
-  ab.group('guilloche', () => {
-    for (let i = 0; i < lines; i++) {
-      const phase = (i / lines) * Math.PI * 2;
-      for (const sign of [1, -1]) {
-        const pts = [];
-        for (let s = 0; s <= steps; s++) {
-          const t = s / steps;
-          const a = t * Math.PI * 2 * periods;
-          const env = 0.5 + 0.5 * Math.sin(t * Math.PI * 2 * (o.beat || 1.5) + phase / 3);
-          pts.push([x + t * w, y + h / 2 + sign * Math.sin(a + phase) * (h / 2) * (0.55 + 0.45 * env)]);
-        }
-        ab.path(pts, { stroke: color, sw: o.sw || 0.6, op });
-      }
-    }
-  });
-}
-
-// Гипотрохоида — розетка «как на ценной бумаге».
-export function rosette(ab, cx, cy, R, o = {}) {
-  const color = o.color || 'gold-500';
-  const k = o.k || 18;
-  const pts = [];
-  const N = o.steps || 720;
-  for (let s = 0; s <= N; s++) {
-    const t = (s / N) * Math.PI * 2;
-    const r = R * (0.86 + 0.14 * Math.cos(k * t));
-    const r2_ = r * (1 + 0.04 * Math.sin((k - 1) * t * 0.5));
-    pts.push([cx + r2_ * Math.cos(t), cy + r2_ * Math.sin(t)]);
-  }
-  ab.group('rosette', () => {
-    ab.path(pts, { stroke: color, sw: o.sw || 0.6, op: o.op ?? 0.6, closed: true });
-    const pts2 = pts.map(([px, py]) => [cx + (px - cx) * 0.72, cy + (py - cy) * 0.72]);
-    ab.path(pts2, { stroke: color, sw: o.sw || 0.6, op: (o.op ?? 0.6) * 0.8, closed: true });
-    ab.circle(cx, cy, R * 0.45, { stroke: color, sw: o.sw || 0.6, op: o.op ?? 0.6 });
-  });
-}
-
 // ---------- клеймо пробы — фирменный знак оценки ----------
-// Вытянутый восьмиугольник с двойным контуром, внутри — число пробы.
+// Вытянутый восьмиугольник с тонким контуром, внутри — число пробы.
 export function hallmark(ab, cx, cy, label, o = {}) {
   const s = o.scale || 1;
   const color = o.color || 'gold-500';
@@ -331,8 +286,7 @@ export function hallmark(ab, cx, cy, label, o = {}) {
   ];
   ab.group(`hallmark/${label}`, () => {
     if (o.fill) ab.path(oct(0, 0), { closed: true, fill: o.fill });
-    ab.path(oct(0, 0), { closed: true, stroke: color, sw: 1.6 * s });
-    ab.path(oct(3.2 * s, 3.2 * s), { closed: true, stroke: color, sw: 0.7 * s });
+    ab.path(oct(0, 0), { closed: true, stroke: color, sw: 1.25 * s });
     const style = o.style || 'hallmark';
     const st = tokens.typography[style];
     ab.text(cx, cy - st.lineHeight / 2, label, style, { fill: o.textColor || color, align: 'center' });
@@ -344,18 +298,19 @@ export function hallmark(ab, cx, cy, label, o = {}) {
 export function logo(ab, x, y, o = {}) {
   const inv = !!o.inverse;
   ab.group('logo', () => {
-    hallmark(ab, x + 22, y + 16, 'Л', { scale: 0.62, w: 70, color: inv ? 'gold-300' : 'gold-500', style: 'h3', textColor: inv ? 'white' : 'malachite-900' });
-    ab.text(x + 52, y + 3, 'Ломбард онлайн', 'logo', { fill: inv ? 'white' : 'malachite-900' });
+    ab.rect(x, y + 2, 28, 28, { r: 6, fill: inv ? 'white' : 'malachite-700' });
+    ab.text(x + 14, y + 2 + (28 - tokens.typography.h4.lineHeight) / 2, 'Л', 'h4', { fill: inv ? 'malachite-700' : 'white', align: 'center' });
+    ab.text(x + 40, y + 3, 'Ломбард онлайн', 'logo', { fill: inv ? 'white' : 'graphite-900' });
   });
-  return 52 + measure('Ломбард онлайн', 'logo');
+  return 40 + measure('Ломбард онлайн', 'logo');
 }
 
 // ---------- кнопки ----------
 const BTN = {
   primary: { fill: 'malachite-700', fg: 'white', stroke: 'none' },
-  secondary: { fill: 'surface', fg: 'malachite-800', stroke: 'line-strong' },
+  secondary: { fill: 'surface', fg: 'graphite-900', stroke: 'line-strong' },
   ghost: { fill: 'none', fg: 'malachite-700', stroke: 'none' },
-  inverse: { fill: 'gold-300', fg: 'malachite-950', stroke: 'none' },
+  inverse: { fill: 'white', fg: 'malachite-800', stroke: 'none' },
   danger: { fill: 'surface', fg: 'danger-700', stroke: 'danger-700' },
   disabled: { fill: 'surface-sunken', fg: 'graphite-400', stroke: 'none' },
   focus: { fill: 'malachite-700', fg: 'white', stroke: 'none', ring: true },
@@ -369,8 +324,8 @@ export function button(ab, x, y, label, o = {}) {
   const tw = measure(label, 'button');
   const w = o.w || tw + padX * 2 + (o.icon ? iconSize + 8 : 0);
   ab.group(`button/${label}`, () => {
-    if (v.ring) ab.rect(x - 4, y - 4, w + 8, h + 8, { r: 14, stroke: 'gold-500', sw: 2 });
-    ab.rect(x, y, w, h, { r: 10, fill: v.fill, stroke: v.stroke, sw: 1 });
+    if (v.ring) ab.rect(x - 4, y - 4, w + 8, h + 8, { r: 12, stroke: 'malachite-300', sw: 2 });
+    ab.rect(x, y, w, h, { r: 8, fill: v.fill, stroke: v.stroke, sw: 1 });
     const st = tokens.typography.button;
     const ty = y + (h - st.lineHeight) / 2;
     if (o.icon) {
@@ -396,7 +351,7 @@ export function field(ab, x, y, w, o = {}) {
     }
     const state = o.state || 'default';
     const stroke = state === 'error' ? 'danger-700' : state === 'focus' ? 'malachite-700' : 'line-strong';
-    if (state === 'focus') ab.rect(x - 3, yy - 3, w + 6, h + 6, { r: 9, stroke: 'gold-300', sw: 3 });
+    if (state === 'focus') ab.rect(x - 3, yy - 3, w + 6, h + 6, { r: 9, stroke: 'malachite-100', sw: 3 });
     ab.rect(x, yy, w, h, { r: 6, fill: o.disabled ? 'surface-sunken' : 'surface', stroke, sw: state === 'default' ? 1 : 1.5 });
     const st = tokens.typography.body;
     const ty = yy + (h - st.lineHeight) / 2;
@@ -421,10 +376,10 @@ export function segmented(ab, x, y, items, active, o = {}) {
   const widths = items.map((t) => measure(t, 'small-strong') + 28);
   const total = widths.reduce((a, b) => a + b, 0) + 8;
   ab.group('segmented', () => {
-    ab.rect(x, y, total, h, { r: 10, fill: 'surface-sunken' });
+    ab.rect(x, y, total, h, { r: 8, fill: 'surface-sunken' });
     items.forEach((t, i) => {
-      if (i === active) ab.rect(cx, y + 4, widths[i], h - 8, { r: 7, fill: 'surface', shadow: 'card' });
-      ab.text(cx + widths[i] / 2, y + (h - 20) / 2, t, 'small-strong', { fill: i === active ? 'malachite-900' : 'graphite-500', align: 'center' });
+      if (i === active) ab.rect(cx, y + 4, widths[i], h - 8, { r: 6, fill: 'surface', stroke: 'line', sw: 1 });
+      ab.text(cx + widths[i] / 2, y + (h - 20) / 2, t, 'small-strong', { fill: i === active ? 'graphite-900' : 'graphite-500', align: 'center' });
       cx += widths[i];
     });
   });
@@ -435,8 +390,7 @@ export function slider(ab, x, y, w, t, o = {}) {
   ab.group('slider', () => {
     ab.rect(x, y + 9, w, 4, { r: 2, fill: 'line' });
     ab.rect(x, y + 9, w * t, 4, { r: 2, fill: o.color || 'malachite-700' });
-    ab.circle(x + w * t, y + 11, 11, { fill: 'surface', stroke: o.color || 'malachite-700', sw: 2, shadow: 'card' });
-    ab.circle(x + w * t, y + 11, 3, { fill: o.color || 'malachite-700' });
+    ab.circle(x + w * t, y + 11, 9, { fill: 'surface', stroke: o.color || 'malachite-700', sw: 2 });
   });
 }
 
@@ -485,7 +439,6 @@ export function stepper(ab, x, y, w, steps, current, o = {}) {
       const cx = x + gap * i;
       const done = i < current;
       const active = i === current;
-      if (active) ab.circle(cx, y + 14, 19, { fill: 'malachite-100' });
       ab.circle(cx, y + 14, 14, {
         fill: done || active ? 'malachite-700' : 'surface',
         stroke: done || active ? 'malachite-700' : 'line-strong', sw: 1.5,
@@ -502,23 +455,21 @@ export function stepper(ab, x, y, w, steps, current, o = {}) {
 // ---------- карточка ----------
 export function card(ab, x, y, w, h, o = {}) {
   return ab.rect(x, y, w, h, {
-    r: o.r ?? 16, fill: o.fill || 'surface', stroke: o.stroke ?? 'line', sw: 1,
-    shadow: o.shadow === false ? undefined : o.shadow || 'card', name: o.name,
+    r: Math.min(o.r ?? 12, 12), fill: o.fill || 'surface', stroke: o.stroke ?? 'line', sw: 1,
+    name: o.name,
   });
 }
 
 // ---------- фото изделия (иллюстрация-заглушка) ----------
 export function photo(ab, x, y, w, h, kind, o = {}) {
-  const dark = !!o.dark;
+  const dark = false; // минимализм: все фото на одной светлой подложке
   const bg = dark ? 'photo-bg-dark' : 'photo-bg';
   const metal = o.metal || 'gold-500';
   const cx = x + w / 2;
   const cy = y + h / 2;
   const s = Math.min(w, h) / 100;
   ab.group(`photo/${kind}`, () => {
-    ab.rect(x, y, w, h, { r: o.r ?? 10, fill: bg });
-    // мягкая «тень» на подложке
-    ab.ellipse(cx, cy + 30 * s, 30 * s, 5 * s, { fill: dark ? 'malachite-950' : 'line-strong', op: 0.5 });
+    ab.rect(x, y, w, h, { r: Math.min(o.r ?? 8, 8), fill: bg });
     if (kind === 'ring') {
       ab.ellipse(cx, cy + 6 * s, 24 * s, 24 * s, { stroke: metal, sw: 7 * s });
       ab.ellipse(cx, cy + 6 * s, 24 * s, 24 * s, { stroke: 'gold-300', sw: 1.4 * s, op: 0.9 });
@@ -563,8 +514,8 @@ export function photo(ab, x, y, w, h, kind, o = {}) {
     }
     if (o.label) {
       const lw = measure(o.label, 'caption') + 14;
-      ab.rect(x + 8, y + h - 30, lw, 22, { r: 6, fill: 'malachite-950', op: 0.72 });
-      ab.text(x + 15, y + h - 27, o.label, 'caption', { fill: 'white' });
+      ab.rect(x + 8, y + h - 30, lw, 22, { r: 4, fill: 'surface' });
+      ab.text(x + 15, y + h - 27, o.label, 'caption', { fill: 'graphite-700' });
     }
   });
 }
@@ -578,16 +529,15 @@ export function appHeader(ab, w, o = {}) {
     let nx = (o.x ?? 120) + 260;
     (o.nav || []).forEach((n, i) => {
       const active = i === (o.active ?? 0);
-      ab.text(nx, 24, n, active ? 'small-strong' : 'small', { fill: active ? 'malachite-900' : 'graphite-500' });
+      ab.text(nx, 24, n, active ? 'small-strong' : 'small', { fill: active ? 'graphite-900' : 'graphite-500' });
       const tw = measure(n, active ? 'small-strong' : 'small');
-      if (active) ab.rect(nx, 64, tw, 4, { r: 2, fill: 'malachite-700' });
+      if (active) ab.rect(nx, 66, tw, 2, { fill: 'malachite-700' });
       nx += tw + 32;
     });
     const right = w - (o.x ?? 120);
     icon(ab, 'bell', right - 200, 22, 24, 'graphite-700');
-    ab.circle(right - 180, 24, 4, { fill: 'danger-700' });
-    ab.circle(right - 144, 34, 18, { fill: o.avatarFill || 'malachite-100' });
-    ab.text(right - 144, 24, o.initials || 'АК', 'small-strong', { fill: 'malachite-900', align: 'center' });
+    ab.circle(right - 144, 34, 18, { fill: o.avatarFill || 'surface-sunken' });
+    ab.text(right - 144, 24, o.initials || 'АК', 'small-strong', { fill: 'graphite-700', align: 'center' });
     ab.text(right - 116, 15, o.user || 'Анна Королёва', 'small-strong', { fill: 'text' });
     ab.text(right - 116, 35, o.role || 'Клиент', 'caption', { fill: 'graphite-500' });
   });
@@ -596,12 +546,11 @@ export function appHeader(ab, w, o = {}) {
 export function toast(ab, x, y, w, title, text, o = {}) {
   const tone = tokens.tone[o.tone || 'success'];
   ab.group('toast', () => {
-    ab.rect(x, y, w, 72, { r: 12, fill: 'malachite-950', shadow: 'raised' });
-    ab.rect(x, y, 4, 72, { r: 2, fill: tone.dot === 'success-700' ? 'malachite-300' : tone.dot });
-    icon(ab, o.icon || 'check', x + 18, y + 14, 22, 'malachite-300', 2);
-    ab.text(x + 52, y + 14, title, 'small-strong', { fill: 'white' });
-    ab.text(x + 52, y + 36, text, 'small', { fill: 'malachite-300', w: w - 100 });
-    icon(ab, 'close', x + w - 34, y + 14, 18, 'malachite-300');
+    ab.rect(x, y, w, 72, { r: 12, fill: 'surface', stroke: 'line' });
+    icon(ab, o.icon || 'check', x + 18, y + 14, 22, tone.fg, 2);
+    ab.text(x + 52, y + 14, title, 'small-strong', { fill: 'text' });
+    ab.text(x + 52, y + 36, text, 'small', { fill: 'graphite-500', w: w - 100 });
+    icon(ab, 'close', x + w - 34, y + 14, 18, 'graphite-400');
   });
 }
 
@@ -609,6 +558,6 @@ export function toast(ab, x, y, w, title, text, o = {}) {
 export function kv(ab, x, y, w, k, v, o = {}) {
   ab.text(x, y, k, o.kStyle || 'small', { fill: 'graphite-500' });
   ab.text(x + w, y, v, o.vStyle || 'small-strong', { fill: o.vFill || 'text', align: 'right' });
-  if (o.rule !== false) ab.line(x, y + 30, x + w, y + 30, { stroke: 'line', dash: o.dash ? [2, 3] : undefined });
+  if (o.rule !== false) ab.line(x, y + 30, x + w, y + 30, { stroke: 'line' });
   return 40;
 }

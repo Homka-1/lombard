@@ -1,4 +1,4 @@
-import { Artboard, button, icon, card, photo, kv, appHeader, badge, field, hallmark, kzt, measure, guilloche, wrap } from '../kit.mjs';
+import { Artboard, button, icon, card, photo, kv, appHeader, badge, field, hallmark, kzt, measure, wrap } from '../kit.mjs';
 import { CLIENT_NAV } from './04-client-wizard.mjs';
 
 // Вертикальный таймлайн статусов заявки
@@ -13,21 +13,21 @@ export function timeline(ab, x, y, w, items) {
   // линии — первыми, чтобы кружки легли поверх
   for (let i = 0; i < pts.length - 1; i++) {
     const done = items[i + 1].state !== 'todo';
-    ab.line(x + 10, pts[i] + 20, x + 10, pts[i + 1], { stroke: done ? 'malachite-700' : 'line-strong', sw: 2, dash: done ? undefined : [2, 4] });
+    ab.line(x + 10, pts[i] + 20, x + 10, pts[i + 1], { stroke: done ? 'malachite-700' : 'line', sw: 1.5 });
   }
   items.forEach((it, i) => {
     const py = pts[i];
     const done = it.state === 'done';
     const cur = it.state === 'current';
-    if (cur) ab.circle(x + 10, py + 10, 15, { fill: 'gold-100' });
     ab.circle(x + 10, py + 10, 10, {
-      fill: done ? 'malachite-700' : cur ? 'gold-500' : 'surface',
-      stroke: done ? 'malachite-700' : cur ? 'gold-500' : 'line-strong', sw: 1.5,
+      fill: done ? 'malachite-700' : 'surface',
+      stroke: done || cur ? 'malachite-700' : 'line-strong', sw: cur ? 2 : 1.5,
     });
+    if (cur) ab.circle(x + 10, py + 10, 4, { fill: 'malachite-700' });
     if (done) icon(ab, 'check', x + 3, py + 3, 14, 'white', 2.4);
     ab.text(x + 36, py, it.title, cur ? 'small-strong' : 'small', { fill: it.state === 'todo' ? 'graphite-500' : 'text' });
     if (it.time) ab.text(x + w, py, it.time, 'caption', { fill: 'graphite-500', align: 'right' });
-    if (it.note) ab.text(x + 36, py + 22, it.note, 'caption', { fill: cur ? 'gold-700' : 'graphite-500', w: w - 36 });
+    if (it.note) ab.text(x + 36, py + 22, it.note, 'caption', { fill: 'graphite-500', w: w - 36 });
   });
   return ty - y;
 }
@@ -42,7 +42,7 @@ export default function clientApplication() {
   icon(ab, 'arrowLeft', X, y, 20, 'malachite-700');
   ab.text(X + 28, y, 'Мои заявки', 'small-strong', { fill: 'malachite-700' });
   y += 40;
-  ab.text(X, y, 'Кольцо с камнем', 'h1', { fill: 'malachite-950' });
+  ab.text(X, y, 'Кольцо с камнем', 'h1', { fill: 'graphite-900' });
   badge(ab, X + measure('Кольцо с камнем', 'h1') + 20, y + 16, 'OFFER_SENT');
   ab.text(X, y + 62, 'Заявка № 10-482 от 3 ноября, золото 585, 4,2 г', 'small', { fill: 'graphite-500' });
   y += 112;
@@ -54,16 +54,16 @@ export default function clientApplication() {
   // ---------- Оферта ----------
   let oy = y;
   ab.group('offer', () => {
-    const oc = card(ab, X, oy, MW, 470, { r: 24, stroke: 'gold-300', shadow: 'raised' });
+    const oc = card(ab, X, oy, MW, 470);
     const px = X + 40;
     const pw = MW - 80;
     let cy = oy + 40;
     ab.text(px, cy, 'Предложение эксперта', 'h3');
-    ab.text(px + pw, cy + 4, 'Действует до 5 ноября, 15:05', 'small', { fill: 'gold-700', align: 'right' });
+    ab.text(px + pw, cy + 4, 'Действует до 5 ноября, 15:05', 'small', { fill: 'graphite-500', align: 'right' });
     cy += 52;
     ab.text(px, cy, 'Сумма займа', 'small', { fill: 'graphite-500' });
-    ab.text(px, cy + 22, kzt(95200), 'amount-xl', { fill: 'malachite-950' });
-    hallmark(ab, px + measure(kzt(95200), 'amount-xl') + 64, cy + 54, '585', { scale: 0.9 });
+    ab.text(px, cy + 22, kzt(95200), 'amount-xl', { fill: 'graphite-900' });
+    hallmark(ab, px + measure(kzt(95200), 'amount-xl') + 56, cy + 54, '585', { scale: 0.8 });
     const gx = px + 400;
     ab.text(gx, cy, 'Вернуть до 3 декабря', 'small', { fill: 'graphite-500' });
     ab.text(gx, cy + 22, kzt(100912), 'amount-l', { fill: 'graphite-700' });
@@ -71,14 +71,14 @@ export default function clientApplication() {
     const colW = (pw - 32) / 3;
     [['Оценка эксперта', kzt(119000)], ['Ставка', '0,2 % в день'], ['Срок', '30 дней']].forEach(([k, v], i) => {
       const cx = px + i * (colW + 16);
-      ab.rect(cx, cy, colW, 68, { r: 10, fill: 'paper' });
+      ab.rect(cx, cy, colW, 68, { r: 8, stroke: 'line' });
       ab.text(cx + 16, cy + 12, k, 'caption', { fill: 'graphite-500' });
       ab.text(cx + 16, cy + 32, v, 'body-strong');
     });
     cy += 92;
     // комментарий эксперта
-    ab.circle(px + 20, cy + 20, 20, { fill: 'malachite-100' });
-    ab.text(px + 20, cy + 10, 'ЕС', 'small-strong', { fill: 'malachite-900', align: 'center' });
+    ab.circle(px + 20, cy + 20, 20, { fill: 'surface-sunken' });
+    ab.text(px + 20, cy + 10, 'ЕС', 'small-strong', { fill: 'graphite-700', align: 'center' });
     ab.text(px + 56, cy, 'Ерлан Сапаров, эксперт-оценщик', 'small-strong');
     const ch = ab.text(px + 56, cy + 22, 'Клеймо и вес совпадают с описанием. Камень — фианит, на сумму не влияет. Окончательно подтвердим при осмотре.', 'small', { fill: 'graphite-700', w: pw - 56 });
     cy += 22 + ch + 28;
@@ -107,8 +107,8 @@ export default function clientApplication() {
     days.forEach(([d, s], i) => {
       const dx = px + i * (dw + 12);
       const act = i === 1;
-      ab.rect(dx, cy, dw, 60, { r: 10, fill: act ? 'malachite-50' : 'surface', stroke: act ? 'malachite-700' : 'line', sw: act ? 1.5 : 1 });
-      ab.text(dx + 14, cy + 10, d, 'small-strong', { fill: act ? 'malachite-900' : 'text' });
+      ab.rect(dx, cy, dw, 60, { r: 8, fill: 'surface', stroke: act ? 'malachite-700' : 'line', sw: act ? 1.5 : 1 });
+      ab.text(dx + 14, cy + 10, d, 'small-strong', { fill: 'text' });
       if (s) ab.text(dx + 14, cy + 32, s, 'caption', { fill: 'graphite-500' });
     });
     cy += 80;
@@ -118,14 +118,14 @@ export default function clientApplication() {
     const sw = (pw - 48) / 5;
     slots.forEach(([t, st], i) => {
       const sx = px + i * (sw + 12);
-      ab.rect(sx, cy, sw, 44, { r: 10, fill: st === 'active' ? 'malachite-700' : st === 'busy' ? 'surface-sunken' : 'surface', stroke: st === 'free' ? 'line' : 'none' });
+      ab.rect(sx, cy, sw, 44, { r: 8, fill: st === 'active' ? 'malachite-700' : st === 'busy' ? 'surface-sunken' : 'surface', stroke: st === 'free' ? 'line' : 'none' });
       ab.text(sx + sw / 2, cy + 12, st === 'busy' ? 'Занято' : t, 'small-strong', { fill: st === 'active' ? 'white' : st === 'busy' ? 'graphite-400' : 'text', align: 'center' });
     });
     cy += 64;
     field(ab, px, cy, (pw - 16) / 2, { label: 'Телефон для курьера', value: '+7 701 555-24-18' });
     field(ab, px + (pw + 16) / 2, cy, (pw - 16) / 2, { label: 'Комментарий', placeholder: 'Подъезд, домофон, этаж' });
     cy += 88;
-    icon(ab, 'shield', px, cy + 12, 22, 'malachite-700');
+    icon(ab, 'shield', px, cy + 12, 22, 'graphite-700', 1.5);
     ab.text(px + 32, cy + 4, 'Изделие застраховано на 119 000 ₸', 'small-strong');
     ab.text(px + 32, cy + 24, 'Курьер упакует его в сейф-пакет при вас', 'caption', { fill: 'graphite-500' });
     button(ab, px + pw - 200, cy + 4, 'Вызвать курьера', { w: 200 });
@@ -140,13 +140,13 @@ export default function clientApplication() {
     card(ab, RX, ry, RW, 262, { r: 16 });
     ab.text(RX + 28, ry + 28, 'Предварительная оценка', 'h4');
     ab.text(RX + 28, ry + 54, 'По фото и параметрам, 3 ноября', 'caption', { fill: 'graphite-500' });
-    ab.text(RX + 28, ry + 84, '112 000 – 127 000 ₸', 'amount-m', { fill: 'malachite-950' });
+    ab.text(RX + 28, ry + 84, '112 000 – 127 000 ₸', 'amount-m', { fill: 'graphite-900' });
     ab.text(RX + 28, ry + 128, 'Уверенность', 'caption', { fill: 'graphite-500' });
-    ab.text(RX + RW - 28, ry + 128, '92 %', 'caption', { fill: 'malachite-700', align: 'right' });
-    ab.rect(RX + 28, ry + 150, RW - 56, 4, { r: 2, fill: 'line' });
-    ab.rect(RX + 28, ry + 150, (RW - 56) * 0.92, 4, { r: 2, fill: 'malachite-700' });
+    ab.text(RX + RW - 28, ry + 128, '92 %', 'caption', { fill: 'graphite-700', align: 'right' });
+    ab.rect(RX + 28, ry + 150, RW - 56, 2, { fill: 'line' });
+    ab.rect(RX + 28, ry + 150, (RW - 56) * 0.92, 2, { fill: 'malachite-700' });
     const tw = (RW - 56 - 24) / 4;
-    ['ring', 'stamp', 'ring', 'ring'].forEach((k, i) => photo(ab, RX + 28 + i * (tw + 8), ry + 174, tw, 60, k, { r: 8, dark: i % 2 === 1 }));
+    ['ring', 'stamp', 'ring', 'ring'].forEach((k, i) => photo(ab, RX + 28 + i * (tw + 8), ry + 174, tw, 60, k, { r: 8 }));
   });
   ry += 286;
 
@@ -167,11 +167,10 @@ export default function clientApplication() {
   });
 
   ab.group('help', () => {
-    ab.rect(RX, ry, RW, 120, { r: 16, fill: 'malachite-900' });
-    guilloche(ab, RX + 270, ry + 20, RW - 290, 80, { color: 'gold-300', op: 0.2, lines: 5, periods: 3 });
-    ab.text(RX + 28, ry + 28, 'Есть вопрос по оценке?', 'h4', { fill: 'white' });
-    ab.text(RX + 28, ry + 54, 'Напишите эксперту в чат заявки', 'small', { fill: 'malachite-300' });
-    ab.text(RX + 28, ry + 82, 'Открыть чат', 'small-strong', { fill: 'gold-300' });
+    card(ab, RX, ry, RW, 120);
+    ab.text(RX + 28, ry + 28, 'Есть вопрос по оценке?', 'h4');
+    ab.text(RX + 28, ry + 54, 'Напишите эксперту в чат заявки', 'small', { fill: 'graphite-500' });
+    ab.text(RX + 28, ry + 82, 'Открыть чат', 'small-strong', { fill: 'malachite-700' });
   });
 
   ab.h = Math.max(oy, ry + 120) + 80;
