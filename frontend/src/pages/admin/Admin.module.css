@@ -1,0 +1,525 @@
+/* Кабинет администратора (артборд 08): дашборд, справочники, пользователи, курьеры. */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.pageHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4) var(--space-6);
+}
+
+.subline {
+  max-width: 72ch;
+  margin-top: var(--space-2);
+  color: var(--color-graphite-700);
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.caption,
+.cellSub {
+  display: block;
+  font: var(--type-caption);
+  letter-spacing: var(--type-caption-tracking);
+  color: var(--text-muted);
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+.panelHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3) var(--space-4);
+}
+
+.more,
+.panel > a:last-child {
+  align-self: flex-start;
+  font: var(--type-small-strong);
+  text-decoration: none;
+}
+
+/* ---------- плитки ---------- */
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-6);
+}
+
+@media (max-width: 1099px) {
+  .tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 479px) {
+  .tiles {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+  }
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.tileLabel {
+  margin-bottom: var(--space-2);
+  color: var(--color-graphite-700);
+}
+
+.tileValue {
+  margin-bottom: var(--space-2);
+  font: var(--type-amount-l);
+  letter-spacing: var(--type-amount-l-tracking);
+  font-variant-numeric: tabular-nums;
+}
+
+.tileValue[data-danger] {
+  color: var(--color-danger-700);
+}
+
+.tileNote {
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+/* ---------- сетка дашборда ---------- */
+.dashGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+  gap: var(--space-6);
+  align-items: start;
+}
+
+@media (max-width: 1099px) {
+  .dashGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---------- столбчатая диаграмма ---------- */
+.chart {
+  position: relative;
+  margin: 0;
+}
+
+.chartArea {
+  position: relative;
+}
+
+.chartSvg {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.grid {
+  stroke: var(--color-line);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+
+.axis {
+  stroke: var(--color-line-strong);
+  stroke-width: 1;
+}
+
+.tick {
+  fill: var(--text-muted);
+  font: 500 12px var(--font-text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* SVG сжимается вместе с карточкой — на узких экранах подписи крупнее в координатах SVG */
+@media (max-width: 599px) {
+  .tick {
+    font-size: 22px;
+  }
+}
+
+.bar {
+  fill: var(--color-malachite-100);
+}
+
+.barActive {
+  fill: var(--primary);
+}
+
+.hit {
+  fill: transparent;
+  cursor: default;
+}
+
+.hit:focus {
+  outline: none;
+}
+
+.hit:focus-visible {
+  stroke: var(--focus);
+  stroke-width: 2;
+}
+
+.tooltip {
+  position: absolute;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  font: var(--type-caption);
+  color: var(--color-graphite-700);
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translate(-50%, calc(-100% - 10px));
+}
+
+.tooltip[data-edge="end"] {
+  transform: translate(-100%, calc(-100% - 10px));
+}
+
+.tooltip[data-edge="start"] {
+  transform: translate(0, calc(-100% - 10px));
+}
+
+.tooltip strong {
+  font: var(--type-small-strong);
+  color: var(--text);
+}
+
+/* ---------- этапы ---------- */
+.stages {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.stages li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-2) var(--space-4);
+}
+
+.stages strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.stageBar {
+  grid-column: 1 / -1;
+  display: block;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--color-surface-sunken);
+  overflow: hidden;
+}
+
+.stageBar > span {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--primary);
+}
+
+/* ---------- цены металлов ---------- */
+.metals {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+
+.metals > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto 64px;
+  gap: var(--space-4);
+  align-items: baseline;
+  padding-block: var(--space-3);
+}
+
+.metals > div + div {
+  border-top: 1px solid var(--border);
+}
+
+.metals dd {
+  margin: 0;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+[data-trend] {
+  font: var(--type-caption);
+  font-weight: 600;
+}
+
+[data-trend="up"] {
+  color: var(--color-success-700);
+}
+
+[data-trend="down"] {
+  color: var(--color-danger-700);
+}
+
+.metalTiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--space-4);
+  margin: 0;
+}
+
+.metalTiles > div {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.metalTiles dt {
+  color: var(--color-graphite-700);
+}
+
+.metalTiles dd {
+  margin: 0;
+}
+
+.metalPrice {
+  font: var(--type-amount-m);
+  letter-spacing: var(--type-amount-m-tracking);
+  font-variant-numeric: tabular-nums;
+}
+
+.priceForm {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 260px) auto;
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.priceForm > button {
+  justify-self: start;
+  margin-top: 26px;
+}
+
+@media (max-width: 767px) {
+  .priceForm {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .priceForm > button {
+    margin-top: 0;
+  }
+}
+
+.history summary {
+  font: var(--type-small-strong);
+  color: var(--primary);
+  cursor: pointer;
+}
+
+.history[open] summary {
+  margin-bottom: var(--space-3);
+}
+
+/* ---------- время приложения ---------- */
+.clock {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-4) var(--space-8);
+  align-items: center;
+}
+
+.clock .muted {
+  max-width: 64ch;
+  margin-top: var(--space-2);
+  font: var(--type-small);
+}
+
+.clockActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  justify-content: flex-end;
+}
+
+@media (max-width: 899px) {
+  .clock {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .clockActions {
+    justify-content: flex-start;
+  }
+}
+
+/* ---------- таблицы ---------- */
+.tableCard {
+  padding: 0;
+  overflow: hidden;
+}
+
+.tableWrap {
+  /* скрытые подписи (visually-hidden) позиционируются внутри прокрутки, а не страницы */
+  position: relative;
+  overflow-x: auto;
+  margin-inline: calc(-1 * var(--space-2));
+  padding-inline: var(--space-2);
+}
+
+.tableCard .tableWrap {
+  margin: 0;
+  padding: 0;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font: var(--type-small);
+}
+
+.table th,
+.table td {
+  padding: var(--space-3) var(--space-3);
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.tableCard .table th:first-child,
+.tableCard .table td:first-child {
+  padding-left: var(--space-6);
+}
+
+.tableCard .table th:last-child,
+.tableCard .table td:last-child {
+  padding-right: var(--space-6);
+}
+
+.table thead th {
+  font: var(--type-caption);
+  letter-spacing: var(--type-caption-tracking);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+.table tr[data-muted] td {
+  color: var(--text-muted);
+}
+
+.table strong {
+  font-weight: 600;
+}
+
+.num {
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.rowAction {
+  text-align: right !important;
+  white-space: nowrap;
+}
+
+.courierCell {
+  min-width: 220px;
+}
+
+.roleCell {
+  min-width: 170px;
+}
+
+@media (max-width: 767px) {
+  .table {
+    min-width: 640px;
+  }
+}
+
+/* ---------- формы ---------- */
+.modalForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.row2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+@media (max-width: 479px) {
+  .row2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: minmax(0, 360px) 220px;
+  gap: var(--space-4);
+}
+
+@media (max-width: 599px) {
+  .filters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---------- курьеры ---------- */
+.couriers {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--space-4);
+}
+
+.couriers li {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--color-surface-sunken);
+  font: var(--type-small-strong);
+}
+
+.load {
+  text-align: right;
+  font: var(--type-small);
+}

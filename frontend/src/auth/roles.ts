@@ -14,7 +14,7 @@ export interface NavItem {
   icon: IconName;
 }
 
-/** Разделы кабинета по ролям. Сами экраны появятся на этапах 10–11. */
+/** Разделы кабинета по ролям (пункты меню в шапке). */
 export const ROLE_NAV: Record<Role, NavItem[]> = {
   CLIENT: [
     { to: "/client", label: "Мои заявки", icon: "list" },

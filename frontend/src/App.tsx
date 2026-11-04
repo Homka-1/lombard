@@ -10,11 +10,18 @@ import { ToastProvider } from "./components/ui/Toast";
 import { AppLayout } from "./layouts/AppLayout";
 import { PublicLayout } from "./layouts/PublicLayout";
 import { LoginPage, RegisterPage } from "./pages/auth/AuthPages";
-import { SectionPlaceholder } from "./pages/cabinet/SectionPlaceholder";
+import { CabinetNotFound } from "./pages/cabinet/CabinetNotFound";
 import { ApplicationPage } from "./pages/client/ApplicationPage";
 import { ApplicationsPage } from "./pages/client/ApplicationsPage";
 import { LoanPage, LoansPage } from "./pages/client/LoansPage";
 import { WizardPage } from "./pages/client/WizardPage";
+import { CourierPage } from "./pages/courier/CourierPage";
+import { InspectionsPage, QueuePage } from "./pages/expert/QueuePage";
+import { ReviewPage } from "./pages/expert/ReviewPage";
+import { CatalogPage } from "./pages/admin/CatalogPage";
+import { CouriersPage } from "./pages/admin/CouriersPage";
+import { DashboardPage } from "./pages/admin/DashboardPage";
+import { UsersPage } from "./pages/admin/UsersPage";
 import { LandingPage } from "./pages/landing/LandingPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { createQueryClient } from "./lib/queryClient";
@@ -22,11 +29,18 @@ import { ROUTER_FUTURE } from "./lib/router";
 
 const ROLES: Role[] = ["CLIENT", "EXPERT", "COURIER", "ADMIN"];
 
-/** Готовые экраны разделов; остальные пока — заглушки (этап 11). */
+/** Экраны разделов (пункты меню `ROLE_NAV`). */
 const SECTION_PAGES: Record<string, ReactNode> = {
   "/client": <ApplicationsPage />,
   "/client/new": <WizardPage />,
   "/client/loans": <LoansPage />,
+  "/expert": <QueuePage />,
+  "/expert/inspections": <InspectionsPage />,
+  "/courier": <CourierPage />,
+  "/admin": <DashboardPage />,
+  "/admin/catalog": <CatalogPage />,
+  "/admin/users": <UsersPage />,
+  "/admin/couriers": <CouriersPage />,
 };
 
 /** Вложенные экраны кабинета (не пункты меню). */
@@ -35,6 +49,7 @@ const EXTRA_ROUTES: Partial<Record<Role, { path: string; element: ReactNode }[]>
     { path: "applications/:id", element: <ApplicationPage /> },
     { path: "loans/:id", element: <LoanPage /> },
   ],
+  EXPERT: [{ path: "applications/:id", element: <ReviewPage /> }],
 };
 
 /** Прокрутка: к якорю (`/#faq`) или в начало при смене страницы. */
@@ -70,7 +85,7 @@ export function AppRoutes() {
         >
           {ROLE_NAV[role].map((item) => {
             const sub = item.to.split("/").slice(2).join("/");
-            const element = SECTION_PAGES[item.to] ?? <SectionPlaceholder />;
+            const element = SECTION_PAGES[item.to] ?? <CabinetNotFound />;
             return sub ? (
               <Route key={item.to} path={sub} element={element} />
             ) : (
@@ -80,7 +95,7 @@ export function AppRoutes() {
           {EXTRA_ROUTES[role]?.map((r) => (
             <Route key={r.path} path={r.path} element={r.element} />
           ))}
-          <Route path="*" element={<SectionPlaceholder />} />
+          <Route path="*" element={<CabinetNotFound />} />
         </Route>
       ))}
       <Route element={<PublicLayout />}>

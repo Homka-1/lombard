@@ -1,0 +1,299 @@
+/* Кабинет курьера (артборд 07): одна колонка, рассчитана на телефон в руке. */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  max-width: 600px;
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-bottom: var(--space-5);
+  border-bottom: 1px solid var(--border);
+}
+
+.who {
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+.dayRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.day {
+  font: var(--type-h1);
+  letter-spacing: var(--type-h1-tracking);
+}
+
+.dayNav {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.dayNav button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.dayNav button:hover {
+  background: var(--color-malachite-50);
+}
+
+.progressText {
+  margin-top: var(--space-2);
+  color: var(--color-graphite-700);
+}
+
+.progress {
+  display: block;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--color-line);
+  overflow: hidden;
+}
+
+.progress > span {
+  display: block;
+  height: 100%;
+  background: var(--primary);
+  transition: width var(--motion-slow) var(--motion-easing);
+}
+
+.nextRow {
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+.tabs {
+  align-self: flex-start;
+}
+
+.empty {
+  color: var(--color-graphite-700);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* ---------- свёрнутый выезд ---------- */
+.row {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-5) var(--space-12) var(--space-5) var(--space-6);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.row:hover {
+  border-color: var(--color-line-strong);
+}
+
+.rowChevron {
+  position: absolute;
+  top: 50%;
+  right: var(--space-4);
+  transform: translateY(-50%);
+  color: var(--color-graphite-400);
+}
+
+.rowTop {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+}
+
+.time {
+  font: var(--type-body-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.rowTitle {
+  font: var(--type-h4);
+}
+
+.address,
+.addressBig {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+}
+
+.address svg,
+.addressBig svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--color-graphite-500);
+}
+
+.addressBig {
+  font: var(--type-body-strong);
+}
+
+.sub {
+  display: block;
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+/* ---------- раскрытый выезд ---------- */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  border: 1.5px solid var(--color-line-strong);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.cardTitle {
+  font: var(--type-h3);
+  letter-spacing: var(--type-h3-tracking);
+}
+
+.mapLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  align-self: flex-start;
+  font: var(--type-small-strong);
+  text-decoration: none;
+}
+
+.contact {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) 52px;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--color-surface-sunken);
+  font: var(--type-small-strong);
+}
+
+.contactText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  font: var(--type-small);
+  color: var(--color-graphite-700);
+}
+
+.contactText strong {
+  font: var(--type-body-strong);
+  color: var(--text);
+}
+
+.call {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border: 1.5px solid var(--color-line-strong);
+  border-radius: var(--radius-md);
+  color: var(--text);
+}
+
+.call:hover {
+  background: var(--color-malachite-50);
+  color: var(--text);
+}
+
+.item {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-md);
+  background: var(--color-paper);
+}
+
+.item svg {
+  flex: none;
+  color: var(--color-graphite-700);
+}
+
+.steps {
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.steps li {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+.steps li > span:first-child {
+  display: block;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--color-line);
+}
+
+.steps li[data-done] {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.steps li[data-done] > span:first-child {
+  background: var(--primary);
+}
+
+.doneNote {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font: var(--type-small-strong);
+  color: var(--color-success-700);
+}
+
+@media (max-width: 479px) {
+  .day {
+    font: var(--type-h2);
+  }
+  .card {
+    padding: var(--space-5);
+  }
+  .row {
+    padding-left: var(--space-5);
+  }
+}

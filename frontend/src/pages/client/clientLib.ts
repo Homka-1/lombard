@@ -1,63 +1,15 @@
 import type { ItemKind } from "../../components/ItemArt";
 import type { Application, ApplicationStatus, Photo } from "../../api/types";
-import { NBSP } from "../../lib/format";
+import { formatDayKz } from "../../lib/time";
 
-/** Время Казахстана — UTC+5 круглый год. */
-const KZ_OFFSET_MS = 5 * 60 * 60 * 1000;
-
-function kzDate(value: string | Date): Date {
-  return new Date(new Date(value).getTime() + KZ_OFFSET_MS);
-}
-
-/** «14:40» по времени Казахстана. */
-export function formatTimeKz(value: string | Date): string {
-  const d = kzDate(value);
-  return `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
-}
-
-const MONTHS = [
-  "января",
-  "февраля",
-  "марта",
-  "апреля",
-  "мая",
-  "июня",
-  "июля",
-  "августа",
-  "сентября",
-  "октября",
-  "ноября",
-  "декабря",
-];
-const WEEKDAYS = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
-
-/** «3 ноября» по времени Казахстана (для отметок времени из API). */
-export function formatDayKz(value: string | Date): string {
-  const d = kzDate(value);
-  return `${d.getUTCDate()}${NBSP}${MONTHS[d.getUTCMonth()]}`;
-}
-
-/** «3 ноября, 14:40». */
-export function formatDateTimeKz(value: string | Date): string {
-  return `${formatDayKz(value)}, ${formatTimeKz(value)}`;
-}
-
-/** Дата слота «2026-11-05» → «Чт, 5 ноября». */
-export function formatSlotDay(isoDate: string): string {
-  const d = new Date(`${isoDate}T12:00:00Z`);
-  return `${WEEKDAYS[d.getUTCDay()]}, ${d.getUTCDate()}${NBSP}${MONTHS[d.getUTCMonth()]}`;
-}
-
-/** Сегодняшняя дата по Казахстану в формате ISO (для подписи «Сегодня» у слотов). */
-export function todayKz(now: Date = new Date()): string {
-  return kzDate(now).toISOString().slice(0, 10);
-}
-
-export function addDaysIso(iso: string, n: number): string {
-  const d = new Date(`${iso}T12:00:00Z`);
-  d.setUTCDate(d.getUTCDate() + n);
-  return d.toISOString().slice(0, 10);
-}
+export {
+  addDaysIso,
+  formatDateTimeKz,
+  formatDayKz,
+  formatSlotDay,
+  formatTimeKz,
+  todayKz,
+} from "../../lib/time";
 
 /** Иллюстрация-заглушка по категории (если у заявки нет фото). */
 export function itemKind(categoryCode: string): ItemKind {

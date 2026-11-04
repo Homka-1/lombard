@@ -127,7 +127,12 @@ export type ApplicationAction =
   | "issue_funds"
   | "repay"
   | "extend"
-  | "schedule_return";
+  | "schedule_return"
+  | "take"
+  | "send_offer"
+  | "request_info"
+  | "reject"
+  | "inspect";
 
 export interface CategoryBrief {
   id: number;
@@ -383,4 +388,147 @@ export interface Loan extends LoanSummary {
   payments: Payment[];
   actions: ("repay" | "extend")[];
   now: string;
+}
+
+// ---------- эксперт ----------
+
+export type QueueScope = "new" | "mine" | "inspection" | "all";
+
+export interface QueueItem extends ApplicationListItem {
+  client: UserBrief;
+  expert: UserBrief | null;
+  pre_estimate_value: number | null;
+  pre_estimate_confidence: number | null;
+  requested_amount: number | null;
+}
+
+/** Условия, которые предлагает эксперт; LTV и ставка по умолчанию — из категории. */
+export interface OfferTerms {
+  market_value: number;
+  ltv_percent?: number | null;
+  daily_rate_bp?: number | null;
+  term_days: number;
+  loan_amount?: number | null;
+  hallmark_confirmed?: boolean | null;
+}
+
+export interface OfferCreate extends OfferTerms {
+  comment?: string | null;
+}
+
+export interface InspectionInput {
+  market_value?: number | null;
+  loan_amount?: number | null;
+  hallmark_confirmed?: boolean | null;
+  weight_g?: number | null;
+  comment?: string | null;
+}
+
+export interface InspectionPreview {
+  market_value: number;
+  offer_loan_amount: number;
+  adjusted: boolean;
+  quote: LoanQuote;
+}
+
+// ---------- курьер ----------
+
+export type TaskScope = "day" | "active" | "done" | "all";
+export type CourierStep = "start" | "pick_up" | "deliver";
+
+export interface CourierTask extends Omit<CourierVisit, "courier"> {
+  application: {
+    id: number;
+    number: string;
+    title: string;
+    category_name: string;
+    status: ApplicationStatus;
+    status_label: string;
+  };
+  client: UserBrief;
+  courier: UserBrief | null;
+  created_at: string;
+  updated_at: string;
+  actions: (CourierStep | "assign")[];
+}
+
+export interface CourierLoad {
+  courier: UserBrief;
+  open_tasks: number;
+  today_tasks: number;
+}
+
+// ---------- администратор ----------
+
+export interface AdminCategory extends Omit<Category, "allowed_metals"> {
+  sort_order: number;
+  is_active: boolean;
+}
+
+export interface CategoryCreate {
+  code: string;
+  name: string;
+  description?: string | null;
+  ltv_percent: number;
+  daily_rate_bp: number;
+  min_term_days: number;
+  max_term_days: number;
+  requires_metal: boolean;
+}
+
+export type CategoryUpdate = Partial<Omit<CategoryCreate, "code">> & { is_active?: boolean };
+
+export interface MetalPrice {
+  id: number;
+  metal: Metal;
+  price_per_gram: number;
+  effective_from: string;
+  source: string;
+  is_current: boolean;
+}
+
+export interface StaffCreate extends RegisterInput {
+  role: Role;
+}
+
+export interface Stats {
+  now: string;
+  applications_total: number;
+  by_status: Record<string, number>;
+  funnel: {
+    draft: number;
+    review: number;
+    logistics: number;
+    loans: number;
+    closed: number;
+    declined: number;
+  };
+  loans_active: number;
+  loans_overdue: number;
+  loans_repaid: number;
+  loans_forfeited: number;
+  loans_due_soon: number;
+  portfolio_principal: number;
+  accrued_interest: number;
+  issued_total: number;
+  repaid_total: number;
+  interest_income: number;
+  failed_payments: number;
+  users_by_role: Record<string, number>;
+  couriers_open_tasks: number;
+  courier_tasks_today: number;
+}
+
+export interface ClockState {
+  now: string;
+  offset_seconds: number;
+  offset_days: number;
+  enabled: boolean;
+}
+
+export interface JobsResult {
+  now: string;
+  offers_expired: number;
+  loans_overdue: number;
+  loans_forfeited: number;
 }

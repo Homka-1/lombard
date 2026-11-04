@@ -1,6 +1,27 @@
 import { api, apiFetch, apiGet, apiPost } from "./client";
 import type {
+  AdminCategory,
   Application,
+  CategoryCreate,
+  CategoryUpdate,
+  ClockState,
+  CourierLoad,
+  CourierStep,
+  CourierTask,
+  InspectionInput,
+  InspectionPreview,
+  JobsResult,
+  LoanQuote,
+  MetalPrice,
+  Metal,
+  OfferCreate,
+  OfferTerms,
+  QueueItem,
+  QueueScope,
+  Role,
+  StaffCreate,
+  Stats,
+  TaskScope,
   ApplicationInput,
   ApplicationListItem,
   AuthResponse,
@@ -96,4 +117,81 @@ export const loansApi = {
     });
     return resp.text();
   },
+};
+
+export const expertApi = {
+  queue: (scope: QueueScope) => apiGet<QueueItem[]>(`/expert/queue?scope=${scope}`),
+  take: (id: number) => apiPost<Application>(`/expert/applications/${id}/take`),
+  quote: (id: number, terms: OfferTerms, signal?: AbortSignal) =>
+    apiPost<LoanQuote>(`/expert/applications/${id}/quote`, terms, { signal }),
+  sendOffer: (id: number, data: OfferCreate) =>
+    apiPost<Application>(`/expert/applications/${id}/offer`, data),
+  needInfo: (id: number, comment: string) =>
+    apiPost<Application>(`/expert/applications/${id}/need-info`, { comment: comment || null }),
+  reject: (id: number, reason: string) =>
+    apiPost<Application>(`/expert/applications/${id}/reject`, { reason: reason || null }),
+  inspectionQuote: (id: number, data: InspectionInput, signal?: AbortSignal) =>
+    apiPost<InspectionPreview>(`/expert/applications/${id}/inspection/quote`, data, { signal }),
+  inspect: (id: number, data: InspectionInput) =>
+    apiPost<Application>(`/expert/applications/${id}/inspection`, data),
+};
+
+export const courierApi = {
+  tasks: (scope: TaskScope, day?: string) =>
+    apiGet<CourierTask[]>(`/courier/tasks?scope=${scope}${day ? `&day=${day}` : ""}`),
+  step: (id: number, step: CourierStep) =>
+    apiPost<CourierTask>(`/courier/tasks/${id}/${step === "pick_up" ? "pick-up" : step}`),
+};
+
+export interface AdminTaskFilter {
+  scope?: TaskScope;
+  day?: string;
+  courierId?: number;
+  unassigned?: boolean;
+}
+
+function query(params: Record<string, string | number | boolean | undefined>): string {
+  const q = Object.entries(params)
+    .filter(([, v]) => v !== undefined && v !== "" && v !== false)
+    .map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`)
+    .join("&");
+  return q ? `?${q}` : "";
+}
+
+export const adminApi = {
+  stats: () => apiGet<Stats>("/admin/stats"),
+  loans: () => apiGet<Loan[]>("/loans"),
+  categories: () => apiGet<AdminCategory[]>("/admin/categories"),
+  createCategory: (data: CategoryCreate) => apiPost<AdminCategory>("/admin/categories", data),
+  updateCategory: (id: number, data: CategoryUpdate) =>
+    api<AdminCategory>(`/admin/categories/${id}`, { method: "PATCH", body: data }),
+  metalPrices: () => apiGet<MetalPrice[]>("/admin/metal-prices"),
+  createMetalPrice: (metal: Metal, pricePerGram: number) =>
+    apiPost<MetalPrice>("/admin/metal-prices", { metal, price_per_gram: pricePerGram }),
+  users: (role?: Role | "", q?: string) =>
+    apiGet<User[]>(`/admin/users${query({ role: role || undefined, q: q?.trim() || undefined })}`),
+  updateUser: (id: number, data: { role?: Role; is_active?: boolean; city?: string | null }) =>
+    api<User>(`/admin/users/${id}`, { method: "PATCH", body: data }),
+  createUser: (data: StaffCreate) => apiPost<User>("/admin/users", data),
+  couriers: () => apiGet<CourierLoad[]>("/admin/couriers"),
+  tasks: (f: AdminTaskFilter = {}) =>
+    apiGet<CourierTask[]>(
+      `/admin/courier-tasks${query({
+        scope: f.scope,
+        day: f.day,
+        courier_id: f.courierId,
+        unassigned: f.unassigned,
+      })}`,
+    ),
+  assign: (taskId: number, courierId: number) =>
+    apiPost<CourierTask>(`/admin/courier-tasks/${taskId}/assign`, { courier_id: courierId }),
+  clock: () => apiGet<ClockState>("/admin/clock"),
+  advanceClock: (days: number) =>
+    apiPost<ClockState & { jobs: JobsResult | null }>("/admin/clock", {
+      days,
+      hours: 0,
+      run_jobs: true,
+    }),
+  resetClock: () => api<ClockState>("/admin/clock", { method: "DELETE" }),
+  runJobs: () => apiPost<JobsResult>("/admin/jobs/run"),
 };
