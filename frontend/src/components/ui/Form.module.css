@@ -269,3 +269,135 @@
   font: var(--type-caption);
   color: var(--text-muted);
 }
+
+/* ---------- многострочное поле ---------- */
+.textarea {
+  min-height: 88px;
+  padding: 10px 14px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+/* ---------- плитки выбора (категория, день, интервал) ---------- */
+.choices {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.choices > legend {
+  margin-bottom: var(--space-2);
+  padding: 0;
+}
+
+.choiceGrid {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.choiceGrid[data-variant="tile"] {
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+}
+
+.choiceGrid[data-variant="slot"] {
+  grid-template-columns: repeat(auto-fill, minmax(124px, 1fr));
+}
+
+.choice {
+  position: relative;
+  display: flex;
+  min-width: 0;
+}
+
+.choice input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.choice input:disabled {
+  cursor: not-allowed;
+}
+
+.choiceBody {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  transition:
+    border-color var(--motion-fast) var(--motion-easing),
+    background-color var(--motion-fast) var(--motion-easing);
+}
+
+.choiceLabel {
+  font: var(--type-small-strong);
+  color: var(--text);
+}
+
+.choiceNote {
+  font: var(--type-caption);
+  letter-spacing: var(--type-caption-tracking);
+  color: var(--text-muted);
+}
+
+.choice input:hover:not(:disabled) + .choiceBody {
+  border-color: var(--color-line-strong);
+}
+
+.choice input:checked + .choiceBody {
+  border: 1.5px solid var(--primary);
+  padding: 11.5px 15.5px;
+}
+
+.choice input:focus-visible + .choiceBody {
+  box-shadow: var(--focus-ring);
+}
+
+[data-variant="slot"] .choiceBody {
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 8px 12px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+[data-variant="slot"] .choice input:checked + .choiceBody {
+  border: 1px solid var(--primary);
+  padding: 8px 12px;
+  background: var(--primary);
+}
+
+[data-variant="slot"] .choice input:checked + .choiceBody .choiceLabel {
+  color: var(--text-inverse);
+}
+
+.choice[data-disabled] .choiceBody {
+  border-color: transparent;
+  background: var(--color-surface-sunken);
+}
+
+.choice[data-disabled] .choiceLabel {
+  color: var(--color-graphite-400);
+}
+
+@media (max-width: 479px) {
+  .choiceGrid[data-variant="tile"] {
+    grid-template-columns: 1fr 1fr;
+  }
+  .choiceGrid[data-variant="slot"] {
+    grid-template-columns: 1fr 1fr;
+  }
+}

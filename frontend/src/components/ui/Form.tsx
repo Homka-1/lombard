@@ -1,5 +1,11 @@
 import { forwardRef, useId } from "react";
-import type { CSSProperties, InputHTMLAttributes, ReactNode, SelectHTMLAttributes } from "react";
+import type {
+  CSSProperties,
+  InputHTMLAttributes,
+  ReactNode,
+  SelectHTMLAttributes,
+  TextareaHTMLAttributes,
+} from "react";
 import styles from "./Form.module.css";
 import { Icon } from "./Icon";
 
@@ -172,5 +178,83 @@ export function Slider({ min, max, value, onChange, minLabel, maxLabel, ...rest 
         </div>
       )}
     </div>
+  );
+}
+
+export const Textarea = forwardRef<
+  HTMLTextAreaElement,
+  TextareaHTMLAttributes<HTMLTextAreaElement>
+>(function Textarea({ className, rows = 3, ...rest }, ref) {
+  return (
+    <span className={[styles.control, className].filter(Boolean).join(" ")}>
+      <textarea ref={ref} rows={rows} className={`${styles.input} ${styles.textarea}`} {...rest} />
+    </span>
+  );
+});
+
+export interface Choice<T extends string> {
+  value: T;
+  label: ReactNode;
+  /** Вторая строка плитки: «Сегодня», «LTV 80 %». */
+  note?: ReactNode;
+  disabled?: boolean;
+}
+
+interface ChoiceGroupProps<T extends string> {
+  label: string;
+  /** Подпись видна над плитками; без неё — только для скринридеров. */
+  showLabel?: boolean;
+  options: readonly Choice<T>[];
+  value: T | null;
+  onChange: (value: T) => void;
+  /** tile — плитка с подписью (дни, категории), slot — компактная кнопка-интервал. */
+  variant?: "tile" | "slot";
+  error?: string;
+  className?: string;
+}
+
+/** Выбор одного варианта плитками (категория, день, интервал) — нативные радиокнопки. */
+export function ChoiceGroup<T extends string>({
+  label,
+  showLabel = true,
+  options,
+  value,
+  onChange,
+  variant = "tile",
+  error,
+  className,
+}: ChoiceGroupProps<T>) {
+  const name = useId();
+  const errorId = `${name}-error`;
+  return (
+    <fieldset
+      className={[styles.choices, className].filter(Boolean).join(" ")}
+      aria-describedby={error ? errorId : undefined}
+    >
+      <legend className={showLabel ? styles.label : "visually-hidden"}>{label}</legend>
+      <div className={styles.choiceGrid} data-variant={variant}>
+        {options.map((o) => (
+          <label key={o.value} className={styles.choice} data-disabled={o.disabled || undefined}>
+            <input
+              type="radio"
+              name={name}
+              value={o.value}
+              checked={o.value === value}
+              disabled={o.disabled}
+              onChange={() => onChange(o.value)}
+            />
+            <span className={styles.choiceBody}>
+              <span className={styles.choiceLabel}>{o.label}</span>
+              {o.note && <span className={styles.choiceNote}>{o.note}</span>}
+            </span>
+          </label>
+        ))}
+      </div>
+      {error && (
+        <p id={errorId} className={styles.error}>
+          {error}
+        </p>
+      )}
+    </fieldset>
   );
 }

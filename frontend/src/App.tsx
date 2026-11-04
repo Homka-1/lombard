@@ -11,12 +11,31 @@ import { AppLayout } from "./layouts/AppLayout";
 import { PublicLayout } from "./layouts/PublicLayout";
 import { LoginPage, RegisterPage } from "./pages/auth/AuthPages";
 import { SectionPlaceholder } from "./pages/cabinet/SectionPlaceholder";
+import { ApplicationPage } from "./pages/client/ApplicationPage";
+import { ApplicationsPage } from "./pages/client/ApplicationsPage";
+import { LoanPage, LoansPage } from "./pages/client/LoansPage";
+import { WizardPage } from "./pages/client/WizardPage";
 import { LandingPage } from "./pages/landing/LandingPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { createQueryClient } from "./lib/queryClient";
 import { ROUTER_FUTURE } from "./lib/router";
 
 const ROLES: Role[] = ["CLIENT", "EXPERT", "COURIER", "ADMIN"];
+
+/** Готовые экраны разделов; остальные пока — заглушки (этап 11). */
+const SECTION_PAGES: Record<string, ReactNode> = {
+  "/client": <ApplicationsPage />,
+  "/client/new": <WizardPage />,
+  "/client/loans": <LoansPage />,
+};
+
+/** Вложенные экраны кабинета (не пункты меню). */
+const EXTRA_ROUTES: Partial<Record<Role, { path: string; element: ReactNode }[]>> = {
+  CLIENT: [
+    { path: "applications/:id", element: <ApplicationPage /> },
+    { path: "loans/:id", element: <LoanPage /> },
+  ],
+};
 
 /** Прокрутка: к якорю (`/#faq`) или в начало при смене страницы. */
 function ScrollManager() {
@@ -51,12 +70,16 @@ export function AppRoutes() {
         >
           {ROLE_NAV[role].map((item) => {
             const sub = item.to.split("/").slice(2).join("/");
+            const element = SECTION_PAGES[item.to] ?? <SectionPlaceholder />;
             return sub ? (
-              <Route key={item.to} path={sub} element={<SectionPlaceholder />} />
+              <Route key={item.to} path={sub} element={element} />
             ) : (
-              <Route key={item.to} index element={<SectionPlaceholder />} />
+              <Route key={item.to} index element={element} />
             );
           })}
+          {EXTRA_ROUTES[role]?.map((r) => (
+            <Route key={r.path} path={r.path} element={r.element} />
+          ))}
           <Route path="*" element={<SectionPlaceholder />} />
         </Route>
       ))}

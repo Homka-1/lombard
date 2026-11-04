@@ -156,7 +156,7 @@ async function refreshTokens(): Promise<boolean> {
 function buildInit(opts: RequestOptions): RequestInit {
   const { body, anonymous, headers, ...rest } = opts;
   const h = new Headers(headers);
-  h.set("Accept", "application/json");
+  if (!h.has("Accept")) h.set("Accept", "application/json");
   let payload: BodyInit | undefined;
   if (body instanceof FormData) payload = body;
   else if (body !== undefined) {
