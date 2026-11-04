@@ -1,13 +1,17 @@
 """Client applications: CRUD, photos, submission with automatic pre-estimate."""
 
+from datetime import datetime
 from typing import Annotated
 
-from fastapi import APIRouter, File, Query, Response, UploadFile, status
+from fastapi import APIRouter, Depends, File, Query, Response, UploadFile, status
 
+from app.api.loan_views import loan_summary_read
 from app.api.offer_views import offer_read
+from app.core.config import Settings
 from app.core.deps import (
     ApplicationReader,
     ClientUser,
+    ClockDep,
     PhotoAppraiserDep,
     PhotoSignerDep,
     PhotoStorageDep,
@@ -25,6 +29,7 @@ from app.domain.logistics import TASK_KIND_LABELS, TASK_STATUS_LABELS, Slot
 from app.domain.phone import format_kz_phone
 from app.domain.state_machine import STATUS_LABELS
 from app.models import Application, CourierTask, Photo, StatusHistory, User
+from app.models.base import utcnow
 from app.schemas.application import (
     ApplicationCreate,
     ApplicationListItem,
@@ -40,7 +45,7 @@ from app.schemas.logistics import CourierVisitRead
 from app.schemas.offer import UserBrief
 from app.schemas.review import DeclineBody
 from app.services import applications as svc
-from app.services import inspection, logistics, review
+from app.services import inspection, loans, logistics, review
 from app.storage.photos import PhotoStorage, PhotoUrlSigner, PhotoVariant
 
 router = APIRouter(prefix="/applications", tags=["applications"])
@@ -111,6 +116,17 @@ def _courier_actions(app: Application) -> list[str]:
     return []
 
 
+def _loan_actions(app: Application) -> list[str]:
+    S = ApplicationStatus
+    if app.status is S.INSPECTED and app.loan is None:
+        return ["issue_funds"]
+    if app.status in (S.LOAN_ACTIVE, S.OVERDUE):
+        return ["repay", "extend"]
+    if loans.can_schedule_return(app):
+        return ["schedule_return"]
+    return []
+
+
 def available_actions(app: Application, viewer: User) -> list[str]:
     """What `viewer` can do with the application right now (for the UI)."""
     S = ApplicationStatus
@@ -124,6 +140,7 @@ def available_actions(app: Application, viewer: User) -> list[str]:
         if app.status is S.OFFER_SENT and offer is not None and offer.status is OfferStatus.SENT:
             actions += ["accept_offer", "decline_offer"]
         actions += _courier_actions(app)
+        actions += _loan_actions(app)
     elif viewer.role is Role.EXPERT:
         if app.status is S.PRE_ESTIMATED:
             actions.append("take")
@@ -133,11 +150,18 @@ def available_actions(app: Application, viewer: User) -> list[str]:
             actions.append("inspect")
     elif viewer.role is Role.ADMIN:
         actions += _courier_actions(app)
+        actions += [a for a in _loan_actions(app) if a == "issue_funds"]
     return actions
 
 
 def application_read(
-    app: Application, signer: PhotoUrlSigner, max_photos: int, viewer: User
+    app: Application,
+    signer: PhotoUrlSigner,
+    max_photos: int,
+    viewer: User,
+    *,
+    now: datetime | None = None,
+    settings: Settings | None = None,
 ) -> ApplicationRead:
     pre = svc.latest_auto_appraisal(app)
     expert_appraisal = review.latest_expert_appraisal(app)
@@ -173,12 +197,41 @@ def application_read(
         expert_appraisal=(
             AppraisalRead.model_validate(expert_appraisal) if expert_appraisal else None
         ),
-        offer=offer_read(offer, review.local_today()) if offer else None,
+        offer=offer_read(offer, review.local_today(now)) if offer else None,
         courier_visit=visit_read(visit) if visit else None,
         inspection=AppraisalRead.model_validate(inspected) if inspected else None,
+        loan=(
+            loan_summary_read(app.loan, now or utcnow(), settings or Settings(_env_file=None))
+            if app.loan
+            else None
+        ),
         actions=available_actions(app, viewer),
         history=[history_read(h) for h in sorted(app.history, key=lambda h: h.id)],
     )
+
+
+class CardView:
+    """Renders the application card with the app's photo signer, settings and clock."""
+
+    def __init__(self, signer: PhotoUrlSigner, settings: Settings, now: datetime) -> None:
+        self.signer, self.settings, self.now = signer, settings, now
+
+    def __call__(self, app: Application, viewer: User) -> ApplicationRead:
+        return application_read(
+            app,
+            self.signer,
+            self.settings.max_photos,
+            viewer,
+            now=self.now,
+            settings=self.settings,
+        )
+
+
+def get_card_view(signer: PhotoSignerDep, settings: SettingsDep, clock: ClockDep) -> CardView:
+    return CardView(signer, settings, clock.now())
+
+
+CardViewDep = Annotated[CardView, Depends(get_card_view)]
 
 
 def list_item(app: Application, signer: PhotoUrlSigner) -> ApplicationListItem:
@@ -233,26 +286,24 @@ def list_applications(
 def create_application(
     data: ApplicationCreate,
     session: SessionDep,
+    card: CardViewDep,
     user: ClientUser,
-    signer: PhotoSignerDep,
-    settings: SettingsDep,
 ) -> ApplicationRead:
     app = svc.create_application(session, user, data.model_dump())
     session.commit()
     app = svc.get_application(session, app.id, user)
-    return application_read(app, signer, settings.max_photos, user)
+    return card(app, user)
 
 
 @router.get("/{application_id}", response_model=ApplicationRead, summary="Карточка заявки")
 def get_application(
     application_id: int,
     session: SessionDep,
+    card: CardViewDep,
     user: ApplicationReader,
-    signer: PhotoSignerDep,
-    settings: SettingsDep,
 ) -> ApplicationRead:
     app = svc.get_application(session, application_id, user)
-    return application_read(app, signer, settings.max_photos, user)
+    return card(app, user)
 
 
 @router.patch(
@@ -264,14 +315,13 @@ def update_application(
     application_id: int,
     data: ApplicationUpdate,
     session: SessionDep,
+    card: CardViewDep,
     user: ClientUser,
-    signer: PhotoSignerDep,
-    settings: SettingsDep,
 ) -> ApplicationRead:
     app = svc.get_application(session, application_id, user)
     svc.update_application(session, app, data.model_dump(exclude_unset=True))
     session.commit()
-    return application_read(app, signer, settings.max_photos, user)
+    return card(app, user)
 
 
 @router.delete(
@@ -302,10 +352,10 @@ def upload_photos(
     application_id: int,
     files: Annotated[list[UploadFile], File(description="Одно или несколько фото")],
     session: SessionDep,
+    card: CardViewDep,
     user: ClientUser,
     storage: PhotoStorageDep,
     appraiser: PhotoAppraiserDep,
-    signer: PhotoSignerDep,
     settings: SettingsDep,
 ) -> ApplicationRead:
     app = svc.get_application(session, application_id, user)
@@ -329,7 +379,7 @@ def upload_photos(
     except Exception:
         _delete_files(storage, keys)
         raise
-    return application_read(app, signer, settings.max_photos, user)
+    return card(app, user)
 
 
 @router.delete(
@@ -341,16 +391,15 @@ def delete_photo(
     application_id: int,
     photo_id: int,
     session: SessionDep,
+    card: CardViewDep,
     user: ClientUser,
     storage: PhotoStorageDep,
-    signer: PhotoSignerDep,
-    settings: SettingsDep,
 ) -> ApplicationRead:
     app = svc.get_application(session, application_id, user)
     key = svc.delete_photo(session, app, photo_id)
     session.commit()
     storage.delete(key)
-    return application_read(app, signer, settings.max_photos, user)
+    return card(app, user)
 
 
 @router.put(
@@ -362,14 +411,13 @@ def reorder_photos(
     application_id: int,
     data: PhotoOrder,
     session: SessionDep,
+    card: CardViewDep,
     user: ClientUser,
-    signer: PhotoSignerDep,
-    settings: SettingsDep,
 ) -> ApplicationRead:
     app = svc.get_application(session, application_id, user)
     svc.reorder_photos(app, data.photo_ids)
     session.commit()
-    return application_read(app, signer, settings.max_photos, user)
+    return card(app, user)
 
 
 @router.post(
@@ -380,16 +428,15 @@ def reorder_photos(
 def submit_application(
     application_id: int,
     session: SessionDep,
+    card: CardViewDep,
     user: ClientUser,
     storage: PhotoStorageDep,
     appraiser: PhotoAppraiserDep,
-    signer: PhotoSignerDep,
-    settings: SettingsDep,
 ) -> ApplicationRead:
     app = svc.get_application(session, application_id, user)
     svc.submit_application(session, app, user, storage=storage, appraiser=appraiser)
     session.commit()
-    return application_read(app, signer, settings.max_photos, user)
+    return card(app, user)
 
 
 # --- Offer decision (client) --------------------------------------------------------------
@@ -404,18 +451,17 @@ def submit_application(
 def accept_offer(
     application_id: int,
     session: SessionDep,
+    card: CardViewDep,
     user: ClientUser,
-    signer: PhotoSignerDep,
-    settings: SettingsDep,
 ) -> ApplicationRead:
     app = svc.get_application(session, application_id, user)
     try:
-        review.accept_offer(session, app, user)
+        review.accept_offer(session, app, user, now=card.now)
     except review.OfferExpiredError:
         session.commit()  # keep the expiry, then report the conflict
         raise
     session.commit()
-    return application_read(app, signer, settings.max_photos, user)
+    return card(app, user)
 
 
 @router.post(
@@ -426,16 +472,15 @@ def accept_offer(
 def decline_offer(
     application_id: int,
     session: SessionDep,
+    card: CardViewDep,
     user: ClientUser,
-    signer: PhotoSignerDep,
-    settings: SettingsDep,
     data: DeclineBody | None = None,
 ) -> ApplicationRead:
     app = svc.get_application(session, application_id, user)
     try:
-        review.decline_offer(session, app, user, data.reason if data else None)
+        review.decline_offer(session, app, user, data.reason if data else None, now=card.now)
     except review.OfferExpiredError:
         session.commit()
         raise
     session.commit()
-    return application_read(app, signer, settings.max_photos, user)
+    return card(app, user)

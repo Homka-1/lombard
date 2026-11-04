@@ -1,5 +1,7 @@
 """Apply state-machine transitions to applications and record history."""
 
+from datetime import datetime
+
 from sqlalchemy.orm import Session
 
 from app.domain.enums import Actor, ApplicationStatus
@@ -15,8 +17,11 @@ def change_status(
     *,
     user: User | None = None,
     comment: str | None = None,
+    at: datetime | None = None,
 ) -> StatusHistory:
     """Move `application` to `target` on behalf of `user` (None = system).
+
+    `at` — time of the change (application clock); defaults to the real time.
 
     Raises `TransitionError` subclasses from the state machine. Does not commit.
     """
@@ -26,7 +31,7 @@ def change_status(
 
     application.status = target
     if target is ApplicationStatus.SUBMITTED and application.submitted_at is None:
-        application.submitted_at = utcnow()
+        application.submitted_at = at or utcnow()
     entry = StatusHistory(
         from_status=current,
         to_status=target,
@@ -34,6 +39,8 @@ def change_status(
         actor_role=user.role if user is not None else None,
         comment=comment,
     )
+    if at is not None:
+        entry.created_at = at
     application.history.append(entry)
     session.add(entry)
     return entry

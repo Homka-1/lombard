@@ -7,6 +7,7 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.domain.enums import ApplicationStatus, AppraisalKind, ItemCondition, Metal, Role
+from app.schemas.loan import LoanSummaryRead
 from app.schemas.logistics import CourierVisitRead
 from app.schemas.offer import OfferRead, UserBrief
 
@@ -175,12 +176,15 @@ class ApplicationRead(BaseModel):
     inspection: AppraisalRead | None = Field(
         description="Результат осмотра в ломбарде; details.loan_amount — итоговая сумма займа"
     )
+    loan: LoanSummaryRead | None = Field(
+        default=None, description="Займ (залоговый билет) после выдачи средств"
+    )
     actions: list[str] = Field(
         description=(
             "Действия, доступные текущему пользователю: edit, submit, delete, accept_offer, "
-            "decline_offer, schedule_courier, reschedule_courier (клиент); take, send_offer, "
-            "request_info, reject, inspect (эксперт); schedule_courier, reschedule_courier "
-            "(админ)"
+            "decline_offer, schedule_courier, reschedule_courier, issue_funds, repay, extend, "
+            "schedule_return (клиент); take, send_offer, request_info, reject, inspect "
+            "(эксперт); schedule_courier, reschedule_courier, issue_funds (админ)"
         )
     )
     history: list[StatusHistoryRead]

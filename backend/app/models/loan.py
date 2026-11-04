@@ -30,7 +30,10 @@ class Loan(IdMixin, TimestampMixin, Base):
     daily_rate_bp: Mapped[int] = mapped_column(Integer)
     term_days: Mapped[int] = mapped_column(Integer)
     issued_at: Mapped[datetime] = mapped_column(UTCDateTime())
+    # End of the local due date (23:59:59 UTC+5).
     due_at: Mapped[datetime] = mapped_column(UTCDateTime(), index=True)
+    # Interest accrues from here: the issue time or the last extension.
+    interest_from: Mapped[datetime | None] = mapped_column(UTCDateTime())
     status: Mapped[LoanStatus] = mapped_column(
         str_enum(LoanStatus), default=LoanStatus.ACTIVE, index=True
     )

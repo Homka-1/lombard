@@ -12,6 +12,8 @@ from app.core.db import session_scope
 from app.core.security import TokenError, TokenType, decode_token
 from app.domain.enums import Role
 from app.models import User
+from app.services.clock import Clock
+from app.services.payments import PaymentGateway
 from app.services.photo_appraiser import PhotoAppraiser
 from app.storage.photos import PhotoStorage, PhotoUrlSigner
 
@@ -38,11 +40,21 @@ def get_photo_signer(request: Request) -> PhotoUrlSigner:
     return request.app.state.photo_signer
 
 
+def get_clock(request: Request) -> Clock:
+    return request.app.state.clock
+
+
+def get_payment_gateway(request: Request) -> PaymentGateway:
+    return request.app.state.payment_gateway
+
+
 SettingsDep = Annotated[Settings, Depends(get_app_settings)]
 SessionDep = Annotated[Session, Depends(get_db)]
 PhotoStorageDep = Annotated[PhotoStorage, Depends(get_photo_storage)]
 PhotoAppraiserDep = Annotated[PhotoAppraiser, Depends(get_photo_appraiser)]
 PhotoSignerDep = Annotated[PhotoUrlSigner, Depends(get_photo_signer)]
+ClockDep = Annotated[Clock, Depends(get_clock)]
+PaymentGatewayDep = Annotated[PaymentGateway, Depends(get_payment_gateway)]
 
 # Relative URL: Swagger UI at /api/docs resolves it to /api/auth/token.
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token", auto_error=False)

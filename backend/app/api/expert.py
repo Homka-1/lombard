@@ -4,9 +4,10 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
 
-from app.api.applications import application_read, list_item
+from app.api.applications import CardViewDep, list_item
 from app.api.offer_views import quote_read
 from app.core.deps import (
+    ClockDep,
     ExpertUser,
     PhotoSignerDep,
     SessionDep,
@@ -15,7 +16,6 @@ from app.core.deps import (
 )
 from app.domain.enums import Role
 from app.models import Application, User
-from app.models.base import utcnow
 from app.schemas.application import ApplicationRead
 from app.schemas.logistics import InspectionCreate, InspectionPreview
 from app.schemas.offer import LoanQuoteRead, UserBrief
@@ -88,14 +88,13 @@ def get_queue(
 def take(
     application_id: int,
     session: SessionDep,
+    card: CardViewDep,
     user: ExpertOnly,
-    signer: PhotoSignerDep,
-    settings: SettingsDep,
 ) -> ApplicationRead:
     app = svc.get_application(session, application_id, user)
     review.take_application(session, app, user)
     session.commit()
-    return application_read(app, signer, settings.max_photos, user)
+    return card(app, user)
 
 
 @router.post(
@@ -122,8 +121,8 @@ def send_offer(
     application_id: int,
     data: OfferCreate,
     session: SessionDep,
+    card: CardViewDep,
     user: ExpertOnly,
-    signer: PhotoSignerDep,
     settings: SettingsDep,
 ) -> ApplicationRead:
     app = svc.get_application(session, application_id, user)
@@ -131,7 +130,7 @@ def send_offer(
         session, app, user, offer_input(data, app, data.comment), ttl_hours=settings.offer_ttl_hours
     )
     session.commit()
-    return application_read(app, signer, settings.max_photos, user)
+    return card(app, user)
 
 
 @router.post(
@@ -143,14 +142,13 @@ def need_info(
     application_id: int,
     data: CommentBody,
     session: SessionDep,
+    card: CardViewDep,
     user: ExpertOnly,
-    signer: PhotoSignerDep,
-    settings: SettingsDep,
 ) -> ApplicationRead:
     app = svc.get_application(session, application_id, user)
     review.request_info(session, app, user, data.comment)
     session.commit()
-    return application_read(app, signer, settings.max_photos, user)
+    return card(app, user)
 
 
 @router.post(
@@ -162,14 +160,13 @@ def reject(
     application_id: int,
     data: RejectBody,
     session: SessionDep,
+    card: CardViewDep,
     user: ExpertOnly,
-    signer: PhotoSignerDep,
-    settings: SettingsDep,
 ) -> ApplicationRead:
     app = svc.get_application(session, application_id, user)
     review.reject_application(session, app, user, data.reason)
     session.commit()
-    return application_read(app, signer, settings.max_photos, user)
+    return card(app, user)
 
 
 # --- Inspection after delivery ------------------------------------------------------------
@@ -195,9 +192,10 @@ def preview_inspection(
     data: InspectionCreate,
     session: SessionDep,
     user: ExpertOnly,
+    clock: ClockDep,
 ) -> InspectionPreview:
     app = svc.get_application(session, application_id, user)
-    plan = inspection.plan_inspection(app, inspection_input(data), utcnow())
+    plan = inspection.plan_inspection(app, inspection_input(data), clock.now())
     return InspectionPreview(
         market_value=plan.market_value,
         offer_loan_amount=plan.offer.loan_amount,
@@ -215,11 +213,10 @@ def inspect(
     application_id: int,
     data: InspectionCreate,
     session: SessionDep,
+    card: CardViewDep,
     user: ExpertOnly,
-    signer: PhotoSignerDep,
-    settings: SettingsDep,
 ) -> ApplicationRead:
     app = svc.get_application(session, application_id, user)
-    inspection.inspect(session, app, user, inspection_input(data))
+    inspection.inspect(session, app, user, inspection_input(data), now=card.now)
     session.commit()
-    return application_read(app, signer, settings.max_photos, user)
+    return card(app, user)

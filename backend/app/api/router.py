@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from app.api import (
+    admin,
     admin_users,
     applications,
     auth,
@@ -8,7 +9,9 @@ from app.api import (
     catalog,
     expert,
     health,
+    loans,
     logistics,
+    notifications,
     photos,
 )
 
@@ -25,3 +28,7 @@ api_router.include_router(logistics.visit_router)
 api_router.include_router(logistics.courier_router)
 api_router.include_router(admin_users.router)
 api_router.include_router(logistics.admin_router)
+api_router.include_router(loans.application_router)
+api_router.include_router(loans.router)
+api_router.include_router(notifications.router)
+api_router.include_router(admin.router)

@@ -1,4 +1,4 @@
-"""Admin: list users, change role / activity. (Rest of the admin API — stage 8.)"""
+"""Admin: list users, change role / activity (creating staff — `app/api/admin.py`)."""
 
 from fastapi import APIRouter, HTTPException, Query, status
 from sqlalchemy import or_, select

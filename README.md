@@ -75,6 +75,9 @@ cd frontend && npm test && npm run lint && npm run format:check && npm run build
 | `LOMBARD_MAX_PHOTO_MB` | `10` | Максимальный размер одного фото, МБ |
 | `LOMBARD_PHOTO_URL_TTL_SECONDS` | `3600` | Срок действия подписанных ссылок на фото |
 | `LOMBARD_OFFER_TTL_HOURS` | `72` | Сколько часов клиент может принять предложение эксперта |
+| `LOMBARD_GRACE_PERIOD_DAYS` | `30` | Льготный период после срока займа, затем изделие переходит ломбарду |
+| `LOMBARD_MAX_LOAN_EXTENSIONS` | `5` | Сколько раз можно продлить займ |
+| `LOMBARD_TIME_TRAVEL` | — | «Перемотка времени» для демо; по умолчанию только в `development`/`test` |
 | `LOMBARD_SECRET_KEY` | `dev-insecure-secret-…` | Ключ подписи JWT; вне `development`/`test` обязателен свой (32+ символа) |
 | `LOMBARD_ACCESS_TOKEN_TTL_MINUTES` | `30` | Время жизни access-токена |
 | `LOMBARD_REFRESH_TOKEN_TTL_DAYS` | `14` | Время жизни refresh-токена |
@@ -198,6 +201,56 @@ JWT: короткий access-токен (`Authorization: Bearer …`) и дол�
 `POST /api/applications/{id}/courier` → **Authorize** как `courier@lombard.kz` →
 `GET /api/courier/tasks?scope=active` → `start` → `pick-up` → `deliver` → как
 `expert@lombard.kz` → `POST /api/expert/applications/{id}/inspection` (`{}`).
+
+## Займ: выдача, погашение, продление, возврат
+
+| Метод | Путь | Кто | Назначение |
+|-------|------|-----|-----------|
+| POST | `/api/applications/{id}/payout` | клиент, админ | После осмотра: `{card_number}` → перевод на карту (мок) → `FUNDS_ISSUED` → `LOAN_ACTIVE`, залоговый билет |
+| GET | `/api/loans?status=` | клиент (свои), админ (все) | Займы с суммами «на сегодня» |
+| GET | `/api/loans/{id}` | клиент, админ | Займ: к оплате сегодня, срок, льготный период, продление, платежи, `actions` |
+| GET | `/api/loans/{id}/ticket[?download=true]` | клиент, админ | Залоговый билет — HTML для печати (PDF — «Сохранить как PDF» в браузере) |
+| GET | `/api/loans/{id}/extension?term_days=` | клиент, админ | Сколько стоит продление |
+| POST | `/api/loans/{id}/repay` | клиент | Погасить полностью `{card_number}` → `REPAID` |
+| POST | `/api/loans/{id}/extend` | клиент | Оплатить проценты, новый срок от сегодня `{card_number, term_days?}` → `EXTENDED` → `LOAN_ACTIVE` |
+| POST | `/api/applications/{id}/return` | клиент, админ | После погашения: курьер везёт изделие (`VisitCreate`); курьер `start` → `deliver` → `ITEM_RETURNED` |
+| GET | `/api/notifications[?unread=true]` · `/unread-count` | все с входом | Уведомления личного кабинета |
+| POST | `/api/notifications/{id}/read` · `/read-all` | все с входом | Отметить прочитанными |
+
+**Расчёт.** Проценты — простые, за каждый начатый день по времени Казахстана с даты выдачи
+или последнего продления (не меньше одного дня), ставка из оферты. Вернуть — до конца дня
+срока; после него займ `OVERDUE`, проценты продолжают начисляться, 30 дней льготного
+периода можно погасить или продлить, затем — `FORFEITED` (изделие переходит ломбарду).
+Статус займа пересчитывается при каждом чтении и фоновой задачей.
+
+**Мок-банк** (`app/services/payments.py`, интерфейс `PaymentGateway`): любая карта с
+верной контрольной суммой проходит, например `4400 4301 2345 6789`;
+`4000 0000 0000 0002` — «Банк отклонил операцию», `4000 0000 0000 9995` — «Недостаточно
+средств» (для списаний). Неудачные списания сохраняются как `FAILED`-платежи (ответ 402).
+**SMS и e-mail** не отправляются: мок пишет их в журнал (`GET /api/admin/messages`).
+
+### Администратор
+
+| Метод | Путь | Назначение |
+|-------|------|-----------|
+| GET · POST · PATCH | `/api/admin/categories[/{id}]` | Категории: LTV, ставка, сроки, активность |
+| GET · POST | `/api/admin/metal-prices` | История цен металлов, новая цена (с `effective_from`) |
+| GET · PATCH | `/api/admin/users[/{id}]` | Пользователи, роль, блокировка |
+| POST | `/api/admin/users` | Создать сотрудника (курьеру нужен город) |
+| GET | `/api/admin/stats` | Дашборд: заявки по статусам и воронка, портфель, выдано/погашено, проценты, курьеры |
+| POST | `/api/admin/jobs/run` | Фоновые задачи: истечение офферов, просрочка, изъятие залога |
+| GET · POST · DELETE | `/api/admin/clock` | «Перемотать время» `{days, hours, run_jobs}` / вернуть реальное |
+| GET | `/api/admin/messages?channel=SMS\|EMAIL` | Журнал мок-SMS и e-mail |
+
+**Перемотка времени** — для показа продления и просрочки без ожидания: смещение часов
+приложения хранится в памяти процесса (сбрасывается при перезапуске, нужен один воркер
+uvicorn), работает только в `development`/`test` (или `LOMBARD_TIME_TRAVEL=true`).
+
+Сценарий в Swagger: после осмотра как клиент — `POST /api/applications/{id}/payout`
+(`{"card_number": "4400 4301 2345 6789"}`) → `GET /api/loans/{loan_id}` → как админ
+`POST /api/admin/clock` (`{"days": 10}`) → как клиент `POST /api/loans/{loan_id}/repay` →
+`GET /api/delivery/slots?city=Алматы` → `POST /api/applications/{id}/return` → как курьер
+`start` → `deliver`. Просрочка: `{"days": 31}`, изъятие: `{"days": 61}`.
 
 ## Демо-аккаунты
 

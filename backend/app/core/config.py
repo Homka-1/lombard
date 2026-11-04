@@ -58,10 +58,19 @@ class Settings(BaseSettings):
 
     # Loan rules (stage 8): grace period after the due date before FORFEITED.
     grace_period_days: int = 30
+    max_loan_extensions: int = 5
+    # "Time travel" (POST /api/admin/clock) for demos; None = only in development/test.
+    time_travel: bool | None = None
 
     @property
     def max_photo_bytes(self) -> int:
         return self.max_photo_mb * 1024 * 1024
+
+    @property
+    def time_travel_enabled(self) -> bool:
+        if self.time_travel is None:
+            return self.environment in {"development", "test"}
+        return self.time_travel
 
     @property
     def slot_rules(self) -> SlotRules:

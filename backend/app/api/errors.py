@@ -15,6 +15,7 @@ from app.services.errors import (
     PayloadTooLargeError,
     ValidationProblems,
 )
+from app.services.loans import PaymentDeclinedError
 
 # Pydantic error type → Russian message (ctx placeholders as in pydantic).
 _RU_MESSAGES: dict[str, str] = {
@@ -81,6 +82,10 @@ def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(NotFoundError)
     async def _not_found(_request: Request, exc: NotFoundError) -> JSONResponse:
         return JSONResponse({"detail": str(exc)}, status_code=status.HTTP_404_NOT_FOUND)
+
+    @app.exception_handler(PaymentDeclinedError)
+    async def _declined(_request: Request, exc: PaymentDeclinedError) -> JSONResponse:
+        return JSONResponse({"detail": str(exc)}, status_code=status.HTTP_402_PAYMENT_REQUIRED)
 
     @app.exception_handler(PayloadTooLargeError)
     async def _too_large(_request: Request, exc: PayloadTooLargeError) -> JSONResponse:

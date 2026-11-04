@@ -6,11 +6,11 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
-from app.api.applications import application_read
+from app.api.applications import CardViewDep
 from app.core.deps import (
     AdminUser,
+    ClockDep,
     CurrentUser,
-    PhotoSignerDep,
     SessionDep,
     SettingsDep,
     require_role,
@@ -26,7 +26,6 @@ from app.domain.logistics import (
 from app.domain.phone import format_kz_phone
 from app.domain.state_machine import STATUS_LABELS
 from app.models import CourierTask, User
-from app.models.base import utcnow
 from app.schemas.application import ApplicationRead
 from app.schemas.logistics import (
     AssignCourierBody,
@@ -110,6 +109,7 @@ def get_slots(
     session: SessionDep,
     _user: CurrentUser,
     settings: SettingsDep,
+    clock: ClockDep,
     city: Annotated[str, Query(min_length=2, max_length=100)],
 ) -> list[SlotRead]:
     if city not in {c for c, _ in logistics.served_cities(session)}:
@@ -127,7 +127,7 @@ def get_slots(
             free=a.free,
             available=a.free > 0,
         )
-        for a in logistics.slot_availability(session, city, utcnow(), settings.slot_rules)
+        for a in logistics.slot_availability(session, city, clock.now(), settings.slot_rules)
     ]
 
 
@@ -137,7 +137,7 @@ visit_router = APIRouter(prefix="/applications", tags=["logistics"])
 ClientOrAdmin = Annotated[User, Depends(require_role(Role.CLIENT, Role.ADMIN))]
 
 
-def _visit_input(data: VisitCreate, client: User) -> logistics.VisitInput:
+def visit_input(data: VisitCreate, client: User) -> logistics.VisitInput:
     phone = data.contact_phone or client.phone
     if not phone:
         raise ValidationProblems(
@@ -163,16 +163,16 @@ def schedule_courier(
     application_id: int,
     data: VisitCreate,
     session: SessionDep,
+    card: CardViewDep,
     user: ClientOrAdmin,
-    signer: PhotoSignerDep,
     settings: SettingsDep,
 ) -> ApplicationRead:
     app = svc.get_application(session, application_id, user)
     logistics.schedule_pickup(
-        session, app, user, _visit_input(data, app.client), rules=settings.slot_rules
+        session, app, user, visit_input(data, app.client), now=card.now, rules=settings.slot_rules
     )
     session.commit()
-    return application_read(app, signer, settings.max_photos, user)
+    return card(app, user)
 
 
 @visit_router.put(
@@ -184,16 +184,16 @@ def reschedule_courier(
     application_id: int,
     data: VisitCreate,
     session: SessionDep,
+    card: CardViewDep,
     user: ClientOrAdmin,
-    signer: PhotoSignerDep,
     settings: SettingsDep,
 ) -> ApplicationRead:
     app = svc.get_application(session, application_id, user)
     logistics.reschedule_pickup(
-        session, app, user, _visit_input(data, app.client), rules=settings.slot_rules
+        session, app, user, visit_input(data, app.client), now=card.now, rules=settings.slot_rules
     )
     session.commit()
-    return application_read(app, signer, settings.max_photos, user)
+    return card(app, user)
 
 
 # --- Courier workspace --------------------------------------------------------------------
