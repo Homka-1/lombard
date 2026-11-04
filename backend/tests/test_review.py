@@ -142,7 +142,7 @@ def test_application_to_offer_to_acceptance(client: TestClient, seeded: Session,
     assert accepted["status"] == "OFFER_ACCEPTED"
     assert accepted["status_label"] == "Предложение принято"
     assert accepted["offer"]["status"] == "ACCEPTED" and accepted["offer"]["decided_at"]
-    assert accepted["actions"] == []
+    assert accepted["actions"] == ["schedule_courier"]  # stage 7
     assert [e["to_status"] for e in accepted["history"]] == [
         "DRAFT",
         "SUBMITTED",

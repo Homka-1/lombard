@@ -14,9 +14,17 @@ from app.core.deps import (
     SessionDep,
     SettingsDep,
 )
-from app.domain.enums import ApplicationStatus, OfferStatus, Role
+from app.domain.enums import (
+    ApplicationStatus,
+    CourierTaskKind,
+    CourierTaskStatus,
+    OfferStatus,
+    Role,
+)
+from app.domain.logistics import TASK_KIND_LABELS, TASK_STATUS_LABELS, Slot
+from app.domain.phone import format_kz_phone
 from app.domain.state_machine import STATUS_LABELS
-from app.models import Application, Photo, StatusHistory, User
+from app.models import Application, CourierTask, Photo, StatusHistory, User
 from app.schemas.application import (
     ApplicationCreate,
     ApplicationListItem,
@@ -28,10 +36,11 @@ from app.schemas.application import (
     PhotoRead,
     StatusHistoryRead,
 )
+from app.schemas.logistics import CourierVisitRead
 from app.schemas.offer import UserBrief
 from app.schemas.review import DeclineBody
 from app.services import applications as svc
-from app.services import review
+from app.services import inspection, logistics, review
 from app.storage.photos import PhotoStorage, PhotoUrlSigner, PhotoVariant
 
 router = APIRouter(prefix="/applications", tags=["applications"])
@@ -68,6 +77,40 @@ def history_read(entry: StatusHistory) -> StatusHistoryRead:
     )
 
 
+def visit_read(task: CourierTask) -> CourierVisitRead:
+    return CourierVisitRead(
+        id=task.id,
+        kind=task.kind,
+        kind_label=TASK_KIND_LABELS[task.kind],
+        status=task.status,
+        status_label=TASK_STATUS_LABELS[task.status],
+        courier=UserBrief.model_validate(task.courier) if task.courier else None,
+        city=task.city,
+        address=task.address,
+        contact_phone=task.contact_phone,
+        contact_phone_display=format_kz_phone(task.contact_phone),
+        slot_start=task.slot_start,
+        slot_end=task.slot_end,
+        slot_label=Slot(task.slot_start, task.slot_end).label,
+        comment=task.comment,
+        completed_at=task.completed_at,
+    )
+
+
+def _courier_actions(app: Application) -> list[str]:
+    S = ApplicationStatus
+    if app.status is S.OFFER_ACCEPTED:
+        return ["schedule_courier"]
+    task = logistics.current_task(app, CourierTaskKind.PICKUP)
+    if (
+        app.status is S.COURIER_SCHEDULED
+        and task is not None
+        and task.status is CourierTaskStatus.SCHEDULED
+    ):
+        return ["reschedule_courier"]
+    return []
+
+
 def available_actions(app: Application, viewer: User) -> list[str]:
     """What `viewer` can do with the application right now (for the UI)."""
     S = ApplicationStatus
@@ -80,11 +123,16 @@ def available_actions(app: Application, viewer: User) -> list[str]:
         offer = review.current_offer(app)
         if app.status is S.OFFER_SENT and offer is not None and offer.status is OfferStatus.SENT:
             actions += ["accept_offer", "decline_offer"]
+        actions += _courier_actions(app)
     elif viewer.role is Role.EXPERT:
         if app.status is S.PRE_ESTIMATED:
             actions.append("take")
         elif app.status is S.UNDER_REVIEW and app.expert_id == viewer.id:
             actions += ["send_offer", "request_info", "reject"]
+        elif app.status is S.ITEM_DELIVERED:
+            actions.append("inspect")
+    elif viewer.role is Role.ADMIN:
+        actions += _courier_actions(app)
     return actions
 
 
@@ -94,6 +142,8 @@ def application_read(
     pre = svc.latest_auto_appraisal(app)
     expert_appraisal = review.latest_expert_appraisal(app)
     offer = review.current_offer(app)
+    visit = logistics.current_task(app)
+    inspected = inspection.latest_inspection(app)
     photos = sorted(app.photos, key=lambda p: p.position)
     return ApplicationRead(
         id=app.id,
@@ -124,6 +174,8 @@ def application_read(
             AppraisalRead.model_validate(expert_appraisal) if expert_appraisal else None
         ),
         offer=offer_read(offer, review.local_today()) if offer else None,
+        courier_visit=visit_read(visit) if visit else None,
+        inspection=AppraisalRead.model_validate(inspected) if inspected else None,
         actions=available_actions(app, viewer),
         history=[history_read(h) for h in sorted(app.history, key=lambda h: h.id)],
     )

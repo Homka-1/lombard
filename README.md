@@ -170,6 +170,35 @@ JWT: короткий access-токен (`Authorization: Bearer …`) и дол�
 `GET /api/expert/queue` → `POST …/take` → `POST …/offer`
 (`{"market_value": 11900000, "term_days": 30}`) → снова как клиент → `POST …/offer/accept`.
 
+## Курьер и осмотр
+
+| Метод | Путь | Кто | Назначение |
+|-------|------|-----|-----------|
+| GET | `/api/delivery/cities` | все с входом | Города, где есть активные курьеры |
+| GET | `/api/delivery/slots?city=Алматы` | все с входом | Слоты визита по 2 ч (10:00–20:00 по времени Казахстана), `capacity`/`free`/`available` |
+| POST | `/api/applications/{id}/courier` | клиент, админ | Вызвать курьера: `{city, address, contact_phone?, slot_start, comment?}` → `COURIER_SCHEDULED`; курьер назначается автоматически |
+| PUT | `/api/applications/{id}/courier` | клиент, админ | Перенести визит (пока курьер не выехал) |
+| GET | `/api/courier/tasks?scope=day\|active\|done\|all&day=…` | курьер (свои), админ (все) | Выезды; по умолчанию — на сегодня |
+| GET | `/api/courier/tasks/{id}` | курьер, админ | Выезд: адрес, слот, клиент и телефон, `actions` |
+| POST | `/api/courier/tasks/{id}/start` · `/pick-up` · `/deliver` | курьер | «Выехал» → «Забрал изделие» → «Доставил в ломбард» |
+| GET | `/api/admin/couriers?city=` | админ | Курьеры и загрузка (незавершённые выезды, выезды на сегодня) |
+| GET | `/api/admin/courier-tasks?scope=&courier_id=&unassigned=` | админ | Все выезды |
+| POST | `/api/admin/courier-tasks/{id}/assign` | админ | Переназначить курьера `{courier_id}` (пока он не выехал) |
+| GET | `/api/expert/queue?scope=inspection` | эксперт | Доставленные изделия, ждут осмотра |
+| POST | `/api/expert/applications/{id}/inspection/quote` | эксперт | Расчёт итоговой суммы без сохранения |
+| POST | `/api/expert/applications/{id}/inspection` | эксперт | Осмотр → `INSPECTED`: `{market_value?, loan_amount?, hallmark_confirmed?, weight_g?, comment?}` |
+
+**Назначение курьера** — автоматически: среди активных курьеров города, свободных в этом
+слоте, — наименее загруженный (меньше незавершённых выездов). Вместимость слота = число
+курьеров города; если все заняты — 409. **Осмотр**: эксперт подтверждает сумму или
+уменьшает её (не выше принятой клиентом и не выше LTV новой оценки; причина обязательна);
+итоговые условия — в `inspection.details` карточки заявки. В карточке также `courier_visit`.
+
+Сценарий в Swagger: клиент принял предложение → `GET /api/delivery/slots?city=Алматы` →
+`POST /api/applications/{id}/courier` → **Authorize** как `courier@lombard.kz` →
+`GET /api/courier/tasks?scope=active` → `start` → `pick-up` → `deliver` → как
+`expert@lombard.kz` → `POST /api/expert/applications/{id}/inspection` (`{}`).
+
 ## Демо-аккаунты
 
 Создаются командой `python -m app.seed` (или `make seed`). Пароль у всех — **`demo1234`**

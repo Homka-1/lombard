@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from app.domain.enums import ApplicationStatus, AppraisalKind, Role
 from app.domain.pricing import EstimateError, EstimateInput, estimate, validate_metal_params
-from app.models import Application, Appraisal, Category, Offer, Photo, User
+from app.models import Application, Appraisal, Category, CourierTask, Offer, Photo, User
 from app.services.catalog import current_metal_prices
 from app.services.errors import (
     ConflictError,
@@ -49,6 +49,7 @@ def _load_options():  # type: ignore[no-untyped-def]
         selectinload(Application.offers).selectinload(Offer.expert),
         selectinload(Application.client),
         selectinload(Application.expert),
+        selectinload(Application.courier_tasks).selectinload(CourierTask.courier),
     )
 
 

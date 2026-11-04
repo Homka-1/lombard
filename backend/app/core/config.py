@@ -5,6 +5,8 @@ from functools import lru_cache
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from app.domain.logistics import SlotRules
+
 DEFAULT_SECRET_KEY = "dev-insecure-secret-change-me-in-production"
 
 
@@ -34,6 +36,13 @@ class Settings(BaseSettings):
     # Expert offer (stage 6): how long the client has to accept it.
     offer_ttl_hours: int = 72
 
+    # Courier slots (stage 7), local Kazakhstan time.
+    courier_day_start_hour: int = 10
+    courier_day_end_hour: int = 20
+    courier_slot_hours: int = 2
+    courier_lead_hours: int = 2
+    courier_horizon_days: int = 7
+
     # JWT. The secret must be overridden outside development/test.
     secret_key: str = DEFAULT_SECRET_KEY
     jwt_issuer: str = "lombard"
@@ -53,6 +62,16 @@ class Settings(BaseSettings):
     @property
     def max_photo_bytes(self) -> int:
         return self.max_photo_mb * 1024 * 1024
+
+    @property
+    def slot_rules(self) -> SlotRules:
+        return SlotRules(
+            day_start_hour=self.courier_day_start_hour,
+            day_end_hour=self.courier_day_end_hour,
+            slot_hours=self.courier_slot_hours,
+            lead_hours=self.courier_lead_hours,
+            horizon_days=self.courier_horizon_days,
+        )
 
     @model_validator(mode="after")
     def _check_secret_key(self) -> "Settings":

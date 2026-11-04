@@ -15,11 +15,13 @@ from app.core.deps import (
 )
 from app.domain.enums import Role
 from app.models import Application, User
+from app.models.base import utcnow
 from app.schemas.application import ApplicationRead
+from app.schemas.logistics import InspectionCreate, InspectionPreview
 from app.schemas.offer import LoanQuoteRead, UserBrief
 from app.schemas.review import CommentBody, OfferCreate, OfferTerms, QueueItem, RejectBody
 from app.services import applications as svc
-from app.services import review
+from app.services import inspection, review
 from app.storage.photos import PhotoUrlSigner
 
 router = APIRouter(prefix="/expert", tags=["expert"])
@@ -64,7 +66,10 @@ def offer_input(
 @router.get(
     "/queue",
     response_model=list[QueueItem],
-    summary="Очередь эксперта: new — ждут эксперта, mine — мои в работе, all — все",
+    summary=(
+        "Очередь эксперта: new — ждут эксперта, mine — мои в работе, "
+        "inspection — ждут осмотра в ломбарде, all — все"
+    ),
 )
 def get_queue(
     session: SessionDep,
@@ -163,5 +168,58 @@ def reject(
 ) -> ApplicationRead:
     app = svc.get_application(session, application_id, user)
     review.reject_application(session, app, user, data.reason)
+    session.commit()
+    return application_read(app, signer, settings.max_photos, user)
+
+
+# --- Inspection after delivery ------------------------------------------------------------
+
+
+def inspection_input(data: InspectionCreate) -> inspection.InspectionInput:
+    return inspection.InspectionInput(
+        market_value=data.market_value,
+        loan_amount=data.loan_amount,
+        hallmark_confirmed=data.hallmark_confirmed,
+        weight_g=data.weight_g,
+        comment=data.comment,
+    )
+
+
+@router.post(
+    "/applications/{application_id}/inspection/quote",
+    response_model=InspectionPreview,
+    summary="Осмотр: расчёт итоговой суммы без сохранения",
+)
+def preview_inspection(
+    application_id: int,
+    data: InspectionCreate,
+    session: SessionDep,
+    user: ExpertOnly,
+) -> InspectionPreview:
+    app = svc.get_application(session, application_id, user)
+    plan = inspection.plan_inspection(app, inspection_input(data), utcnow())
+    return InspectionPreview(
+        market_value=plan.market_value,
+        offer_loan_amount=plan.offer.loan_amount,
+        adjusted=plan.adjusted,
+        quote=quote_read(plan.quote),
+    )
+
+
+@router.post(
+    "/applications/{application_id}/inspection",
+    response_model=ApplicationRead,
+    summary="Осмотр доставленного изделия: подтвердить (или уменьшить) сумму займа",
+)
+def inspect(
+    application_id: int,
+    data: InspectionCreate,
+    session: SessionDep,
+    user: ExpertOnly,
+    signer: PhotoSignerDep,
+    settings: SettingsDep,
+) -> ApplicationRead:
+    app = svc.get_application(session, application_id, user)
+    inspection.inspect(session, app, user, inspection_input(data))
     session.commit()
     return application_read(app, signer, settings.max_photos, user)

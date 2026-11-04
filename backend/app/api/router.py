@@ -8,6 +8,7 @@ from app.api import (
     catalog,
     expert,
     health,
+    logistics,
     photos,
 )
 
@@ -19,4 +20,8 @@ api_router.include_router(applications.router)
 api_router.include_router(expert.router)
 api_router.include_router(calculator.router)
 api_router.include_router(photos.router)
+api_router.include_router(logistics.delivery_router)
+api_router.include_router(logistics.visit_router)
+api_router.include_router(logistics.courier_router)
 api_router.include_router(admin_users.router)
+api_router.include_router(logistics.admin_router)

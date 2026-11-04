@@ -7,6 +7,7 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.domain.enums import ApplicationStatus, AppraisalKind, ItemCondition, Metal, Role
+from app.schemas.logistics import CourierVisitRead
 from app.schemas.offer import OfferRead, UserBrief
 
 MAX_REQUESTED_AMOUNT = 100_000_000_00  # 100 млн ₸
@@ -168,10 +169,18 @@ class ApplicationRead(BaseModel):
     expert: UserBrief | None = Field(description="Эксперт, который ведёт заявку")
     expert_appraisal: AppraisalRead | None = Field(description="Последняя экспертная оценка")
     offer: OfferRead | None = Field(description="Последнее предложение (займ) по заявке")
+    courier_visit: CourierVisitRead | None = Field(
+        description="Текущий (последний не отменённый) выезд курьера"
+    )
+    inspection: AppraisalRead | None = Field(
+        description="Результат осмотра в ломбарде; details.loan_amount — итоговая сумма займа"
+    )
     actions: list[str] = Field(
         description=(
             "Действия, доступные текущему пользователю: edit, submit, delete, accept_offer, "
-            "decline_offer (клиент); take, send_offer, request_info, reject (эксперт)"
+            "decline_offer, schedule_courier, reschedule_courier (клиент); take, send_offer, "
+            "request_info, reject, inspect (эксперт); schedule_courier, reschedule_courier "
+            "(админ)"
         )
     )
     history: list[StatusHistoryRead]

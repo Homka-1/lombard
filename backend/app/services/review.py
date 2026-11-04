@@ -4,7 +4,7 @@ Functions do not commit; the API layer commits.
 """
 
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, timedelta
 from enum import StrEnum
 
 from sqlalchemy import select
@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from app.domain.enums import ApplicationStatus, AppraisalKind, OfferStatus, Role
 from app.domain.loan_calc import CategoryTerms, LoanQuote, max_loan_amount, quote, validate_terms
+from app.domain.logistics import KZ_TZ
 from app.domain.money import format_kzt
 from app.models import Application, Appraisal, Category, Offer, User
 from app.models.base import utcnow
@@ -21,10 +22,6 @@ from app.services.notifications import notify
 from app.services.status import change_status
 
 S = ApplicationStatus
-
-# Kazakhstan has a single time zone, UTC+5, since 2024-03-01. Calendar dates of a loan
-# (due date, "вернуть до …") are local dates; timestamps stay in UTC.
-KZ_TZ = timezone(timedelta(hours=5), "Asia/Almaty")
 
 EXPERT_DEFAULT_CONFIDENCE = 90
 REVIEW_STATUSES = frozenset({S.UNDER_REVIEW, S.NEED_INFO, S.OFFER_SENT})
@@ -50,6 +47,7 @@ def category_terms(category: Category) -> CategoryTerms:
 class QueueScope(StrEnum):
     NEW = "new"  # waiting for an expert (PRE_ESTIMATED)
     MINE = "mine"  # taken by me: under review, waiting for photos, offer sent
+    INSPECTION = "inspection"  # delivered to the pawnshop, waiting for an in-person check
     ALL = "all"  # everything in the review stage
 
 
@@ -64,6 +62,8 @@ def expert_queue(session: Session, user: User, scope: QueueScope) -> list[Applic
     )
     if scope is QueueScope.NEW:
         stmt = stmt.where(Application.status == S.PRE_ESTIMATED)
+    elif scope is QueueScope.INSPECTION:
+        stmt = stmt.where(Application.status == S.ITEM_DELIVERED)
     elif scope is QueueScope.MINE:
         stmt = stmt.where(Application.status.in_(REVIEW_STATUSES))
         if user.role is Role.EXPERT:
