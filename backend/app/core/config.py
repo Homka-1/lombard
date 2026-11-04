@@ -26,6 +26,11 @@ class Settings(BaseSettings):
     db_echo: bool = False
     upload_dir: str = "./uploads"
 
+    # Photos of an application (stage 5).
+    max_photos: int = 6
+    max_photo_mb: int = 10
+    photo_url_ttl_seconds: int = 3600
+
     # JWT. The secret must be overridden outside development/test.
     secret_key: str = DEFAULT_SECRET_KEY
     jwt_issuer: str = "lombard"
@@ -41,6 +46,10 @@ class Settings(BaseSettings):
 
     # Loan rules (stage 8): grace period after the due date before FORFEITED.
     grace_period_days: int = 30
+
+    @property
+    def max_photo_bytes(self) -> int:
+        return self.max_photo_mb * 1024 * 1024
 
     @model_validator(mode="after")
     def _check_secret_key(self) -> "Settings":

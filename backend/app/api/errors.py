@@ -8,6 +8,12 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from app.domain.state_machine import InvalidTransitionError, TransitionForbiddenError
+from app.services.errors import (
+    ConflictError,
+    NotFoundError,
+    PayloadTooLargeError,
+    ValidationProblems,
+)
 
 # Pydantic error type → Russian message (ctx placeholders as in pydantic).
 _RU_MESSAGES: dict[str, str] = {
@@ -19,6 +25,12 @@ _RU_MESSAGES: dict[str, str] = {
     "bool_parsing": "Ожидается логическое значение",
     "enum": "Допустимые значения: {expected}",
     "json_invalid": "Некорректный JSON",
+    "greater_than": "Значение должно быть больше {gt}",
+    "greater_than_equal": "Значение должно быть не меньше {ge}",
+    "less_than_equal": "Значение должно быть не больше {le}",
+    "decimal_parsing": "Ожидается число",
+    "decimal_max_places": "Не больше {decimal_places} знаков после запятой",
+    "too_short": "Нужно хотя бы {min_length} элемент(ов)",
 }
 
 
@@ -48,6 +60,26 @@ def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(InvalidTransitionError)
     async def _invalid(_request: Request, exc: InvalidTransitionError) -> JSONResponse:
         return JSONResponse({"detail": str(exc)}, status_code=status.HTTP_409_CONFLICT)
+
+    @app.exception_handler(ValidationProblems)
+    async def _problems(_request: Request, exc: ValidationProblems) -> JSONResponse:
+        detail = [
+            {"loc": ["body", p.field], "msg": p.message, "type": "business_rule"}
+            for p in exc.problems
+        ]
+        return JSONResponse({"detail": detail, "message": exc.message}, status_code=422)
+
+    @app.exception_handler(ConflictError)
+    async def _conflict(_request: Request, exc: ConflictError) -> JSONResponse:
+        return JSONResponse({"detail": str(exc)}, status_code=status.HTTP_409_CONFLICT)
+
+    @app.exception_handler(NotFoundError)
+    async def _not_found(_request: Request, exc: NotFoundError) -> JSONResponse:
+        return JSONResponse({"detail": str(exc)}, status_code=status.HTTP_404_NOT_FOUND)
+
+    @app.exception_handler(PayloadTooLargeError)
+    async def _too_large(_request: Request, exc: PayloadTooLargeError) -> JSONResponse:
+        return JSONResponse({"detail": str(exc)}, status_code=413)
 
     @app.exception_handler(RequestValidationError)
     async def _validation(_request: Request, exc: RequestValidationError) -> JSONResponse:

@@ -12,6 +12,8 @@ from app.core.db import session_scope
 from app.core.security import TokenError, TokenType, decode_token
 from app.domain.enums import Role
 from app.models import User
+from app.services.photo_appraiser import PhotoAppraiser
+from app.storage.photos import PhotoStorage, PhotoUrlSigner
 
 
 def get_app_settings(request: Request) -> Settings:
@@ -24,8 +26,23 @@ def get_db(request: Request) -> Iterator[Session]:
     yield from session_scope(request.app.state.session_factory)
 
 
+def get_photo_storage(request: Request) -> PhotoStorage:
+    return request.app.state.photo_storage
+
+
+def get_photo_appraiser(request: Request) -> PhotoAppraiser:
+    return request.app.state.photo_appraiser
+
+
+def get_photo_signer(request: Request) -> PhotoUrlSigner:
+    return request.app.state.photo_signer
+
+
 SettingsDep = Annotated[Settings, Depends(get_app_settings)]
 SessionDep = Annotated[Session, Depends(get_db)]
+PhotoStorageDep = Annotated[PhotoStorage, Depends(get_photo_storage)]
+PhotoAppraiserDep = Annotated[PhotoAppraiser, Depends(get_photo_appraiser)]
+PhotoSignerDep = Annotated[PhotoUrlSigner, Depends(get_photo_signer)]
 
 # Relative URL: Swagger UI at /api/docs resolves it to /api/auth/token.
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token", auto_error=False)
@@ -87,3 +104,5 @@ ClientUser = Annotated[User, Depends(require_role(Role.CLIENT))]
 ExpertUser = Annotated[User, Depends(require_role(Role.EXPERT, Role.ADMIN))]
 CourierUser = Annotated[User, Depends(require_role(Role.COURIER, Role.ADMIN))]
 AdminUser = Annotated[User, Depends(require_role(Role.ADMIN))]
+# Who may read applications: the owner-client, experts and admins.
+ApplicationReader = Annotated[User, Depends(require_role(Role.CLIENT, Role.EXPERT, Role.ADMIN))]

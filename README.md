@@ -70,7 +70,10 @@ cd frontend && npm test && npm run lint && npm run format:check && npm run build
 | `LOMBARD_ENVIRONMENT` | `development` | Название окружения |
 | `LOMBARD_DATABASE_URL` | `sqlite:///./lombard.db` | База данных (SQLAlchemy URL) |
 | `LOMBARD_DB_ECHO` | `false` | Печатать SQL-запросы в лог |
-| `LOMBARD_UPLOAD_DIR` | `./uploads` | Каталог для фото изделий (с этапа 5) |
+| `LOMBARD_UPLOAD_DIR` | `./uploads` | Каталог для фото изделий |
+| `LOMBARD_MAX_PHOTOS` | `6` | Максимум фото в заявке |
+| `LOMBARD_MAX_PHOTO_MB` | `10` | Максимальный размер одного фото, МБ |
+| `LOMBARD_PHOTO_URL_TTL_SECONDS` | `3600` | Срок действия подписанных ссылок на фото |
 | `LOMBARD_SECRET_KEY` | `dev-insecure-secret-…` | Ключ подписи JWT; вне `development`/`test` обязателен свой (32+ символа) |
 | `LOMBARD_ACCESS_TOKEN_TTL_MINUTES` | `30` | Время жизни access-токена |
 | `LOMBARD_REFRESH_TOKEN_TTL_DAYS` | `14` | Время жизни refresh-токена |
@@ -104,6 +107,37 @@ JWT: короткий access-токен (`Authorization: Bearer …`) и дол�
 В Swagger (`/api/docs`) нажмите **Authorize**, введите e-mail демо-аккаунта и `demo1234`.
 Телефоны принимаются в любом привычном виде (`8 701 123 45 67`, `+7 (701) 123-45-67`) и
 хранятся в формате E.164 (`+77011234567`).
+
+## Заявки, фото и предоценка
+
+| Метод | Путь | Назначение |
+|-------|------|-----------|
+| GET | `/api/catalog/categories`, `/metals`, `/conditions` | Справочники для мастера заявки (без входа): категории с LTV, пробы и цены металлов, состояния |
+| GET / POST | `/api/applications` | Список заявок (клиент — свои, эксперт/админ — все; фильтр `?status=`), создание черновика |
+| GET / PATCH / DELETE | `/api/applications/{id}` | Карточка (фото, предоценка, история статусов), изменение параметров, удаление черновика |
+| POST | `/api/applications/{id}/photos` | Загрузка фото (multipart, поле `files`, JPEG/PNG/WebP, до 6 шт. по 10 МБ) |
+| DELETE | `/api/applications/{id}/photos/{photo_id}` | Удалить фото |
+| PUT | `/api/applications/{id}/photos/order` | Порядок фото `{photo_ids: [...]}`; первое — обложка |
+| POST | `/api/applications/{id}/submit` | Отправить: `DRAFT/NEED_INFO → SUBMITTED → PRE_ESTIMATED` с автоматической предоценкой |
+| GET | `/api/photos/{id}/{full\|thumb}?exp=…&sig=…` | Файл фото по подписанной ссылке (ссылки приходят в ответах API, живут ~1 ч) |
+
+Менять заявку и фото клиент может только в статусах «Черновик» и «Нужны фото». Все суммы — в
+тиынах (`13690000` = 136 900 ₸), вес в API — в граммах (`weight_g`, до 0,001 г).
+
+**Фото** перекодируются в JPEG (до 2560 px, превью 480 px): поворот по EXIF, удаление
+метаданных (в т. ч. GPS), отсев не-изображений и «бомб» по разрешению. Хранятся в
+`LOMBARD_UPLOAD_DIR` (по умолчанию `backend/uploads/`, в git не попадает).
+
+**Предоценка** (`app/domain/pricing.py`, мок-анализ фото — `app/services/photo_appraiser.py`):
+- металлы: `вес × проба / 1000 × цена 999 за грамм` × премия ювелирного бренда × состояние;
+- часы и электроника: базовая цена сегмента бренда × коэффициент состояния (у золотых часов
+  стоимость металла — нижняя граница);
+- уверенность = 65 % полнота параметров + 35 % качество фото (резкость, экспозиция,
+  контраст, разрешение, число разных ракурсов); чем ниже уверенность, тем шире диапазон;
+- в `details` — шаги расчёта, замечания по фото и ориентир суммы займа (стоимость × LTV).
+
+Сценарий в Swagger: **Authorize** как `client@lombard.kz` → `GET /api/applications` (готовый
+черновик) → `POST …/photos` (1–6 фото) → `POST …/submit` → в ответе `pre_estimate`.
 
 ## Демо-аккаунты
 

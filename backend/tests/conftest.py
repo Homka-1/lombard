@@ -25,8 +25,13 @@ def db_url(tmp_path: Path) -> str:
 
 
 @pytest.fixture
-def settings(db_url: str) -> Settings:
-    return Settings(_env_file=None, environment="test", database_url=db_url)
+def settings(db_url: str, tmp_path: Path) -> Settings:
+    return Settings(
+        _env_file=None,
+        environment="test",
+        database_url=db_url,
+        upload_dir=str(tmp_path / "uploads"),
+    )
 
 
 @pytest.fixture
@@ -78,3 +83,38 @@ def auth_headers(client: TestClient, seeded: Session):
         "admin": "admin@lombard.kz",
     }
     return lambda who: login(client, emails[who])
+
+
+# --- Images for photo tests ---------------------------------------------------------------
+
+
+def make_scene(seed: int = 1, size: tuple[int, int] = (1200, 900)):
+    """Deterministic 'photo': random shapes with outlines — sharp, well exposed."""
+    import random
+
+    from PIL import Image, ImageDraw
+
+    rnd = random.Random(seed)
+    img = Image.new("RGB", size, (150, 140, 130))
+    draw = ImageDraw.Draw(img)
+    for _ in range(60):
+        x, y = rnd.randrange(size[0]), rnd.randrange(size[1])
+        w = rnd.randrange(20, 200)
+        color = tuple(rnd.randrange(256) for _ in range(3))
+        if rnd.random() < 0.5:
+            draw.ellipse([x, y, x + w, y + w], fill=color, outline=(0, 0, 0), width=3)
+        else:
+            draw.rectangle([x, y, x + w, y + w // 2], fill=color)
+    return img
+
+
+def image_bytes(img, fmt: str = "JPEG", **save_kwargs) -> bytes:
+    import io
+
+    buf = io.BytesIO()
+    img.save(buf, format=fmt, **save_kwargs)
+    return buf.getvalue()
+
+
+def jpeg(seed: int = 1, size: tuple[int, int] = (1200, 900)) -> bytes:
+    return image_bytes(make_scene(seed, size), "JPEG", quality=90)
