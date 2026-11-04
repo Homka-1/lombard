@@ -71,7 +71,9 @@ cd frontend && npm test && npm run lint && npm run format:check && npm run build
 | `LOMBARD_DATABASE_URL` | `sqlite:///./lombard.db` | База данных (SQLAlchemy URL) |
 | `LOMBARD_DB_ECHO` | `false` | Печатать SQL-запросы в лог |
 | `LOMBARD_UPLOAD_DIR` | `./uploads` | Каталог для фото изделий (с этапа 5) |
-| `LOMBARD_SECRET_KEY` | `change-me-in-production` | Ключ подписи JWT (с этапа 4) |
+| `LOMBARD_SECRET_KEY` | `dev-insecure-secret-…` | Ключ подписи JWT; вне `development`/`test` обязателен свой (32+ символа) |
+| `LOMBARD_ACCESS_TOKEN_TTL_MINUTES` | `30` | Время жизни access-токена |
+| `LOMBARD_REFRESH_TOKEN_TTL_DAYS` | `14` | Время жизни refresh-токена |
 | `LOMBARD_CORS_ORIGINS` | `["http://localhost:5173","http://127.0.0.1:5173"]` | Разрешённые источники (JSON-список) |
 
 Регион — Казахстан: валюта KZT, суммы хранятся в тиынах, даты — в UTC.
@@ -84,6 +86,24 @@ cd frontend && npm test && npm run lint && npm run format:check && npm run build
 - Начать с чистой БД: удалить `backend/lombard.db` и выполнить `make db`.
 - Деньги хранятся целыми числами в тиынах (1 ₸ = 100 тиын), вес — в миллиграммах,
   ставка — в базисных пунктах в день (25 = 0,25 % в день), даты — в UTC.
+
+## Аутентификация
+
+JWT: короткий access-токен (`Authorization: Bearer …`) и долгий refresh-токен.
+
+| Метод | Путь | Назначение |
+|-------|------|-----------|
+| POST | `/api/auth/register` | Регистрация (всегда роль «Клиент»), сразу возвращает токены |
+| POST | `/api/auth/login` | Вход, JSON `{email, password}` → токены + профиль |
+| POST | `/api/auth/token` | То же в виде OAuth2-формы — для кнопки **Authorize** в Swagger (`username` = e-mail) |
+| POST | `/api/auth/refresh` | `{refresh_token}` → новая пара токенов |
+| GET / PATCH | `/api/auth/me` | Профиль текущего пользователя (имя, телефон, город) |
+| POST | `/api/auth/me/password` | Смена пароля |
+| GET / PATCH | `/api/admin/users` | Администратор: список пользователей, смена роли и блокировка |
+
+В Swagger (`/api/docs`) нажмите **Authorize**, введите e-mail демо-аккаунта и `demo1234`.
+Телефоны принимаются в любом привычном виде (`8 701 123 45 67`, `+7 (701) 123-45-67`) и
+хранятся в формате E.164 (`+77011234567`).
 
 ## Демо-аккаунты
 
@@ -99,6 +119,6 @@ cd frontend && npm test && npm run lint && npm run format:check && npm run build
 | Курьер | `courier2@lombard.kz` | Асель Нурланова | +7 775 888-99-00 | Астана |
 | Администратор | `admin@lombard.kz` | Гульнара Беккожина | +7 727 300-10-20 | Алматы |
 
-Вход в приложение появится на этапе 4. У клиента `client@lombard.kz` есть черновик заявки.
+Вход через API — см. раздел «Аутентификация». У клиента `client@lombard.kz` есть черновик заявки.
 Справочники: 5 категорий (золото 80 %, серебро 70 %, платина 75 %, часы 60 %, электроника 50 %)
 и учебные цены металлов 999 пробы за грамм.

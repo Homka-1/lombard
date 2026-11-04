@@ -12,6 +12,13 @@ from app.main import create_app
 from app.models import Base
 
 
+@pytest.fixture(autouse=True)
+def _fast_bcrypt(monkeypatch: pytest.MonkeyPatch) -> None:
+    import app.core.security as security
+
+    monkeypatch.setattr(security, "BCRYPT_ROUNDS", 4)
+
+
 @pytest.fixture
 def db_url(tmp_path: Path) -> str:
     return f"sqlite:///{tmp_path / 'test.db'}"
@@ -42,3 +49,32 @@ def client(settings: Settings, engine: Engine) -> Iterator[TestClient]:
     with TestClient(app) as client:
         yield client
     app.state.engine.dispose()
+
+
+@pytest.fixture
+def seeded(session: Session) -> Session:
+    """DB with reference data and demo users (password `demo1234`)."""
+    from app.seed import run_seed
+
+    run_seed(session)
+    session.commit()
+    return session
+
+
+def login(client: TestClient, email: str, password: str = "demo1234") -> dict[str, str]:
+    resp = client.post("/api/auth/login", json={"email": email, "password": password})
+    assert resp.status_code == 200, resp.text
+    return {"Authorization": f"Bearer {resp.json()['access_token']}"}
+
+
+@pytest.fixture
+def auth_headers(client: TestClient, seeded: Session):
+    """`auth_headers("expert")` → Authorization header of the demo user of that role."""
+    emails = {
+        "client": "client@lombard.kz",
+        "client2": "client2@lombard.kz",
+        "expert": "expert@lombard.kz",
+        "courier": "courier@lombard.kz",
+        "admin": "admin@lombard.kz",
+    }
+    return lambda who: login(client, emails[who])

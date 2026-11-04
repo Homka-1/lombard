@@ -2,7 +2,10 @@
 
 from functools import lru_cache
 
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+DEFAULT_SECRET_KEY = "dev-insecure-secret-change-me-in-production"
 
 
 class Settings(BaseSettings):
@@ -23,8 +26,9 @@ class Settings(BaseSettings):
     db_echo: bool = False
     upload_dir: str = "./uploads"
 
-    # JWT (used from stage 4). Must be overridden outside development.
-    secret_key: str = "change-me-in-production"
+    # JWT. The secret must be overridden outside development/test.
+    secret_key: str = DEFAULT_SECRET_KEY
+    jwt_issuer: str = "lombard"
     access_token_ttl_minutes: int = 30
     refresh_token_ttl_days: int = 14
 
@@ -37,6 +41,17 @@ class Settings(BaseSettings):
 
     # Loan rules (stage 8): grace period after the due date before FORFEITED.
     grace_period_days: int = 30
+
+    @model_validator(mode="after")
+    def _check_secret_key(self) -> "Settings":
+        if self.environment not in {"development", "test"} and (
+            self.secret_key == DEFAULT_SECRET_KEY or len(self.secret_key) < 32
+        ):
+            raise ValueError(
+                "LOMBARD_SECRET_KEY must be set to a random string of 32+ characters "
+                f"in environment {self.environment!r}"
+            )
+        return self
 
 
 @lru_cache
