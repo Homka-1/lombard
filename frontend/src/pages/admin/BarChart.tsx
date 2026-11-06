@@ -65,12 +65,12 @@ export function BarChart({
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className={styles.chartSvg}
-          role="img"
+          role="group"
           aria-label={caption}
           onMouseLeave={() => setActive(null)}
         >
           {ticks.map((t) => (
-            <g key={t}>
+            <g key={t} aria-hidden="true">
               <line
                 x1={PAD.left}
                 x2={W - PAD.right}
@@ -90,6 +90,7 @@ export function BarChart({
               <g key={b.key}>
                 {h > 0 && (
                   <path
+                    aria-hidden="true"
                     d={barPath(x, y(b.value), barW, h)}
                     className={i === shown ? styles.barActive : styles.bar}
                   />
@@ -100,6 +101,7 @@ export function BarChart({
                     y={H - 8}
                     className={styles.tick}
                     textAnchor="middle"
+                    aria-hidden="true"
                   >
                     {b.label}
                   </text>
@@ -111,6 +113,7 @@ export function BarChart({
                   height={plotH}
                   className={styles.hit}
                   tabIndex={0}
+                  role="img"
                   aria-label={`${b.title}: ${b.detail}`}
                   onMouseEnter={() => setActive(i)}
                   onFocus={() => setActive(i)}

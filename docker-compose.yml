@@ -1,0 +1,29 @@
+# Локальный запуск всего проекта одной командой:
+#   docker compose up --build        → http://localhost:8080
+# Данные (SQLite и фото) хранятся в томе lombard-data; сбросить: docker compose down -v
+services:
+  backend:
+    build: ./backend
+    environment:
+      # Учебное демо: development включает «перемотку времени» и допускает ключ по умолчанию.
+      # Для любого внешнего размещения задайте LOMBARD_ENVIRONMENT=production и свой ключ.
+      LOMBARD_ENVIRONMENT: ${LOMBARD_ENVIRONMENT:-development}
+      LOMBARD_SECRET_KEY: ${LOMBARD_SECRET_KEY:-dev-insecure-secret-change-me-in-production}
+      LOMBARD_CORS_ORIGINS: '["http://localhost:8080","http://127.0.0.1:8080"]'
+    volumes:
+      - lombard-data:/data
+    ports:
+      - "8000:8000"   # Swagger: http://localhost:8000/api/docs
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+
+volumes:
+  lombard-data:

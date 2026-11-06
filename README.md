@@ -4,6 +4,12 @@
 за изделием и выдача займа в тенге (₸). План и правила разработки — в [`CLAUDE.md`](CLAUDE.md),
 ход работ — в [`docs/STATUS.md`](docs/STATUS.md).
 
+![Экран оценки эксперта](docs/screenshots/stage-12/06-expert-review.png)
+
+**Самый быстрый запуск — Docker:** `docker compose up --build` → <http://localhost:8080>,
+вход любым [демо-аккаунтом](#демо-аккаунты), пароль `demo1234`. Без Docker — раздел
+«[Быстрый старт](#быстрый-старт)».
+
 ## Состав репозитория
 
 | Каталог | Что внутри |
@@ -11,12 +17,29 @@
 | `backend/` | API на FastAPI (Python 3.12+) |
 | `frontend/` | Веб-интерфейс на React 18 + TypeScript + Vite |
 | `design/` | Макет: токены, сценарий Adobe Illustrator, PNG-превью экранов |
-| `docs/` | Статус и отчёты по этапам |
+| `docs/` | Статус и отчёты по этапам, скриншоты (`docs/screenshots/stage-12/` — итоговые) |
+| `frontend/e2e/` | E2E-смоук Playwright: полный путь заявки всеми ролями и проверка доступности |
+| `docker-compose.yml` | Backend + frontend (nginx) одной командой |
 
 ## Требования
 
 - Python 3.12 или новее
 - Node.js 20 или новее (с npm)
+
+## Запуск в Docker
+
+```bash
+docker compose up --build
+```
+
+- Приложение: <http://localhost:8080> (nginx раздаёт сборку фронтенда и проксирует `/api`).
+- Swagger: <http://localhost:8000/api/docs>.
+- При старте backend сам применяет миграции и загружает демо-данные (повторно — без дублей).
+  База SQLite и фото лежат в томе `lombard-data`; начать с чистого листа —
+  `docker compose down -v`.
+- Окружение по умолчанию — `development` (включена «перемотка времени» для демо). Для
+  внешнего размещения задайте `LOMBARD_ENVIRONMENT=production` и свой `LOMBARD_SECRET_KEY`
+  (32+ символа) — например, в файле `.env` рядом с `docker-compose.yml`.
 
 ## Быстрый старт
 
@@ -90,6 +113,28 @@ cd frontend && npm test && npm run lint && npm run format:check && npm run desig
 ```
 
 Или из корня: `make test`, `make lint`, `make build`.
+
+### E2E (Playwright)
+
+```bash
+cd frontend && npx playwright install chromium   # один раз: браузер для тестов
+cd frontend && npm run e2e                        # или из корня: make e2e
+```
+
+Playwright сам поднимает backend на чистой SQLite-базе (`backend/.e2e/`, миграции + seed,
+перемотка времени включена; Python берётся из `backend/.venv`, иначе `python3`, или из
+`E2E_PYTHON`) и Vite на порту 5174. Наборы:
+
+- `smoke.e2e.ts` — полный путь в браузере: регистрация клиента → мастер заявки с 3 фото →
+  предоценка → эксперт берёт заявку, увеличивает фото, отправляет предложение → клиент
+  принимает и вызывает курьера → курьер (375 px) забирает и доставляет → эксперт
+  подтверждает осмотр → отказ банка и выплата на карту → продление → админ перематывает
+  время, займ просрочен → погашение → курьер возвращает изделие. На каждом шаге — проверка
+  axe-core (WCAG 2.1 A/AA), в конце — отсутствие ошибок в консоли и 5xx от API.
+- `a11y.e2e.ts` — все экраны всех ролей (и по одной карточке из каждого списка): axe на
+  1280 и 360 px, отсутствие горизонтальной прокрутки на 360 px.
+
+Против уже запущенного стенда, например Docker: `E2E_BASE_URL=http://localhost:8080 npm run e2e`.
 
 ## Настройки backend
 
@@ -296,7 +341,18 @@ uvicorn), работает только в `development`/`test` (или `LOMBARD
 | Курьер | `courier2@lombard.kz` | Асель Нурланова | +7 775 888-99-00 | Астана |
 | Администратор | `admin@lombard.kz` | Гульнара Беккожина | +7 727 300-10-20 | Алматы |
 
-Вход в браузере — <http://localhost:5173/login> (кнопки демо-аккаунтов подставляют e-mail и пароль),
+Вход в браузере — <http://localhost:5173/login> (в Docker — <http://localhost:8080/login>) (кнопки демо-аккаунтов подставляют e-mail и пароль),
 через API — см. раздел «Аутентификация». У клиента `client@lombard.kz` есть черновик заявки.
 Справочники: 5 категорий (золото 80 %, серебро 70 %, платина 75 %, часы 60 %, электроника 50 %)
 и учебные цены металлов 999 пробы за грамм.
+
+## Скриншоты
+
+| | |
+|---|---|
+| ![Лэндинг](docs/screenshots/stage-12/01-landing.png) | ![Лэндинг, телефон](docs/screenshots/stage-12/02-landing-mobile.png) |
+| ![Заявки клиента](docs/screenshots/stage-12/03-client-applications.png) | ![Карточка заявки](docs/screenshots/stage-12/04-client-application.png) |
+| ![Очередь эксперта](docs/screenshots/stage-12/05-expert-queue.png) | ![Курьер, телефон](docs/screenshots/stage-12/07-courier-mobile.png) |
+| ![Дашборд администратора](docs/screenshots/stage-12/08-admin-dashboard.png) | |
+
+Макет, по которому сделан интерфейс, — `design/previews/*.png` (этап 1).

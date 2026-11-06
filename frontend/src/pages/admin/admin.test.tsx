@@ -160,7 +160,7 @@ describe("Admin dashboard", () => {
     expect(await screen.findByRole("heading", { name: "Обзор" })).toBeInTheDocument();
     expect(screen.getByText(/^25\s%$/)).toBeInTheDocument();
     expect(screen.getByText(/^Портфель 18,4\sмлн\s₸$/)).toBeInTheDocument();
-    expect(await screen.findByRole("img", { name: /Выдано займов по дням/ })).toBeInTheDocument();
+    expect(await screen.findByRole("group", { name: /Выдано займов по дням/ })).toBeInTheDocument();
 
     await userEvent.click(await screen.findByRole("button", { name: "Назначить автоматически" }));
     await waitFor(() => expect(assigned).toEqual([{ courier_id: 4 }]));

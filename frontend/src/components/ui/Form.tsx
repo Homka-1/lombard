@@ -45,7 +45,7 @@ export function Field({ label, hint, error, aside, className, children }: FieldP
         "aria-invalid": error ? true : undefined,
       })}
       {error ? (
-        <p id={errorId} className={styles.error}>
+        <p id={errorId} className={styles.error} role="alert">
           {error}
         </p>
       ) : (
@@ -251,7 +251,7 @@ export function ChoiceGroup<T extends string>({
         ))}
       </div>
       {error && (
-        <p id={errorId} className={styles.error}>
+        <p id={errorId} className={styles.error} role="alert">
           {error}
         </p>
       )}

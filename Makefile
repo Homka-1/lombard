@@ -1,7 +1,7 @@
 # Shortcuts for Linux/macOS; on Windows use the commands from README directly.
 PY ?= python3
 
-.PHONY: install db migrate seed backend frontend test lint build
+.PHONY: install db migrate seed backend frontend test lint build e2e up
 
 install:
 	$(PY) -m venv backend/.venv
@@ -33,3 +33,10 @@ lint:
 
 build:
 	cd frontend && npm run build
+
+# Browser smoke test: starts its own backend (fresh DB) and Vite.
+e2e:
+	cd frontend && npm run e2e
+
+up:
+	docker compose up --build

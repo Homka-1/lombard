@@ -10,3 +10,42 @@
   max-width: 44ch;
   color: var(--color-graphite-700);
 }
+
+/* Общие стили экранов кабинетов. Модули ролей подключают их через `composes`. */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.pageHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4) var(--space-6);
+}
+
+.titleRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-5);
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  align-self: flex-start;
+  margin-bottom: calc(-1 * var(--space-4));
+  font: var(--type-small-strong);
+  text-decoration: none;
+}
+
+.modalForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}

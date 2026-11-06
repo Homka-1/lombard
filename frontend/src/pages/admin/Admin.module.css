@@ -1,17 +1,11 @@
 /* Кабинет администратора (артборд 08): дашборд, справочники, пользователи, курьеры. */
 
 .page {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-8);
+  composes: page from "../cabinet/Cabinet.module.css";
 }
 
 .pageHead {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--space-4) var(--space-6);
+  composes: pageHead from "../cabinet/Cabinet.module.css";
 }
 
 .subline {
@@ -462,9 +456,7 @@
 
 /* ---------- формы ---------- */
 .modalForm {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-5);
+  composes: modalForm from "../cabinet/Cabinet.module.css";
 }
 
 .row2 {

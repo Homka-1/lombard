@@ -1,17 +1,11 @@
 /* Кабинет эксперта: очередь, осмотр и экран оценки (артборд 06). */
 
 .page {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-8);
+  composes: page from "../cabinet/Cabinet.module.css";
 }
 
 .pageHead {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--space-4) var(--space-6);
+  composes: pageHead from "../cabinet/Cabinet.module.css";
 }
 
 .greeting {
@@ -46,13 +40,7 @@
 }
 
 .back {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  align-self: flex-start;
-  margin-bottom: calc(-1 * var(--space-4));
-  font: var(--type-small-strong);
-  text-decoration: none;
+  composes: back from "../cabinet/Cabinet.module.css";
 }
 
 /* ---------- очередь ---------- */
@@ -203,10 +191,7 @@
 }
 
 .titleRow {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-3) var(--space-5);
+  composes: titleRow from "../cabinet/Cabinet.module.css";
 }
 
 .subline {
@@ -538,9 +523,7 @@
 
 .offerForm,
 .modalForm {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-5);
+  composes: modalForm from "../cabinet/Cabinet.module.css";
 }
 
 .fieldGroup {

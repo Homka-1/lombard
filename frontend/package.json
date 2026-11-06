@@ -14,7 +14,8 @@
     "format:check": "prettier --check .",
     "design": "node scripts/build-design.mjs",
     "design:check": "node scripts/build-design.mjs --check",
-    "typecheck": "tsc -b"
+    "typecheck": "tsc -b",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "@fontsource/golos-text": "^5.3.0",
@@ -25,7 +26,9 @@
     "react-router-dom": "^6.30.6"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "@eslint/js": "^9.39.5",
+    "@playwright/test": "1.63.0",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
@@ -44,5 +47,8 @@
     "typescript-eslint": "^8.72.1",
     "vite": "^6.4.5",
     "vitest": "^3.2.7"
+  },
+  "overrides": {
+    "playwright-core": "1.63.0"
   }
 }
