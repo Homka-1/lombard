@@ -132,6 +132,8 @@ cd backend && pytest
 # frontend
 cd frontend && npm install && npm run dev                                 # http://localhost:5173
 cd frontend && npm test && npm run build
+# demo (этап 13): открыть demo/index.html с диска; пересборка и проверки
+cd frontend && npm run build:demo && npm run demo:check && npm run e2e:demo
 ```
 
 ---

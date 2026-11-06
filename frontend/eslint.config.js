@@ -17,6 +17,18 @@ export default tseslint.config(
     },
   },
   {
+    // мок-бэкенд демо-версии: обычный скрипт без модулей, грузится с file:// (этап 13)
+    files: ["demo-src/**/*.js"],
+    extends: [js.configs.recommended],
+    languageOptions: {
+      ecmaVersion: 2017,
+      sourceType: "script",
+      globals: { ...globals.browser, globalThis: "readonly" },
+    },
+    // в ES2017 нет `catch {}` без переменной
+    rules: { "no-unused-vars": ["error", { caughtErrors: "none" }] },
+  },
+  {
     // тестовые утилиты экспортируют и компоненты, и функции — fast refresh им не нужен
     files: ["src/test/**", "**/*.test.{ts,tsx}"],
     rules: { "react-refresh/only-export-components": "off" },

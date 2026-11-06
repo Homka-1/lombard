@@ -1,0 +1,398 @@
+{
+  "estimates": [
+    {
+      "input": {
+        "category_code": "gold",
+        "category_name": "Золото",
+        "requires_metal": true,
+        "ltv_percent": 80,
+        "metal": "GOLD",
+        "fineness": 585,
+        "weight_mg": 4200,
+        "condition": "GOOD",
+        "metal_price_per_gram": 6650000,
+        "photo_confidence": 84
+      },
+      "value": 15850000,
+      "value_min": 14450000,
+      "value_max": 17240000,
+      "confidence": 88,
+      "loan_min": 11560000,
+      "loan_max": 12680000,
+      "steps": [
+        {
+          "label": "Золото 585 пробы, 4.2 г × 66 500 ₸/г (999)",
+          "amount": 16339050
+        },
+        {
+          "label": "Состояние: Хорошее",
+          "factor": 0.97
+        },
+        {
+          "label": "Диапазон ±9 % при уверенности 88 %",
+          "amount": 15850000
+        }
+      ],
+      "warnings": [],
+      "summary": "Предварительная оценка 144 500 ₸ – 172 400 ₸, уверенность высокая (88 %)."
+    },
+    {
+      "input": {
+        "category_code": "gold",
+        "category_name": "Золото",
+        "requires_metal": true,
+        "ltv_percent": 80,
+        "metal": "GOLD",
+        "fineness": 750,
+        "weight_mg": 12345,
+        "brand": "Cartier",
+        "condition": null,
+        "metal_price_per_gram": 6650000,
+        "photo_confidence": null
+      },
+      "value": 77640000,
+      "value_min": 59630000,
+      "value_max": 95650000,
+      "confidence": 52,
+      "loan_min": 47700000,
+      "loan_max": 62110000,
+      "steps": [
+        {
+          "label": "Золото 750 пробы, 12.345 г × 66 500 ₸/г (999)",
+          "amount": 61570687
+        },
+        {
+          "label": "Бренд «Cartier» — ювелирный дом",
+          "factor": 1.3
+        },
+        {
+          "label": "Состояние: Хорошее (не указано — принято «Хорошее»)",
+          "factor": 0.97
+        },
+        {
+          "label": "Диапазон ±23 % при уверенности 52 %",
+          "amount": 77640000
+        }
+      ],
+      "warnings": ["Фото не анализировались"],
+      "summary": "Предварительная оценка 596 300 ₸ – 956 500 ₸, уверенность средняя (52 %)."
+    },
+    {
+      "input": {
+        "category_code": "watches",
+        "category_name": "Часы",
+        "requires_metal": false,
+        "ltv_percent": 60,
+        "brand": "Omega Seamaster",
+        "condition": "EXCELLENT",
+        "photo_confidence": 71
+      },
+      "value": 127500000,
+      "value_min": 104040000,
+      "value_max": 150960000,
+      "confidence": 64,
+      "loan_min": 62420000,
+      "loan_max": 76500000,
+      "steps": [
+        {
+          "label": "Часы: «Omega Seamaster» — Премиум",
+          "amount": 150000000
+        },
+        {
+          "label": "Состояние: Отличное",
+          "factor": 0.85
+        },
+        {
+          "label": "Диапазон ±18 % при уверенности 64 %",
+          "amount": 127500000
+        }
+      ],
+      "warnings": [],
+      "summary": "Предварительная оценка 1 040 400 ₸ – 1 509 600 ₸, уверенность средняя (64 %)."
+    },
+    {
+      "input": {
+        "category_code": "watches",
+        "category_name": "Часы",
+        "requires_metal": false,
+        "ltv_percent": 60,
+        "brand": "Rolex",
+        "condition": "GOOD",
+        "metal": "GOLD",
+        "fineness": 750,
+        "weight_mg": 150000,
+        "metal_price_per_gram": 6650000,
+        "photo_confidence": 90
+      },
+      "value": 748130000,
+      "value_min": 640400000,
+      "value_max": 855860000,
+      "confidence": 74,
+      "loan_min": 384240000,
+      "loan_max": 448880000,
+      "steps": [
+        {
+          "label": "Часы: «Rolex» — Люкс",
+          "amount": 350000000
+        },
+        {
+          "label": "Состояние: Хорошее",
+          "factor": 0.7
+        },
+        {
+          "label": "Стоимость металла (Золото 750, 150 г) выше — берём её",
+          "amount": 748125000
+        },
+        {
+          "label": "Диапазон ±14 % при уверенности 74 %",
+          "amount": 748130000
+        }
+      ],
+      "warnings": [],
+      "summary": "Предварительная оценка 6 404 000 ₸ – 8 558 600 ₸, уверенность средняя (74 %)."
+    },
+    {
+      "input": {
+        "category_code": "electronics",
+        "category_name": "Электроника",
+        "requires_metal": false,
+        "ltv_percent": 50,
+        "brand": "Noname",
+        "condition": "FAIR",
+        "photo_confidence": 40
+      },
+      "value": 2400000,
+      "value_min": 1630000,
+      "value_max": 3170000,
+      "confidence": 30,
+      "loan_min": 820000,
+      "loan_max": 1200000,
+      "steps": [
+        {
+          "label": "Электроника: бренд «Noname» не найден в справочнике",
+          "amount": 6000000
+        },
+        {
+          "label": "Состояние: Удовлетворительное",
+          "factor": 0.4
+        },
+        {
+          "label": "Диапазон ±32 % при уверенности 30 %",
+          "amount": 2400000
+        }
+      ],
+      "warnings": ["Укажите бренд и модель — это заметно уточнит оценку"],
+      "summary": "Предварительная оценка 16 300 ₸ – 31 700 ₸, уверенность низкая (30 %)."
+    },
+    {
+      "input": {
+        "category_code": "silver",
+        "category_name": "Серебро",
+        "requires_metal": true,
+        "ltv_percent": 70,
+        "metal": "SILVER",
+        "fineness": 925,
+        "weight_mg": 31100,
+        "brand": "Pandora",
+        "condition": "POOR",
+        "metal_price_per_gram": 82000,
+        "photo_confidence": 63
+      },
+      "value": 2210000,
+      "value_min": 1950000,
+      "value_max": 2460000,
+      "confidence": 81,
+      "loan_min": 1370000,
+      "loan_max": 1550000,
+      "steps": [
+        {
+          "label": "Серебро 925 пробы, 31.1 г × 820 ₸/г (999)",
+          "amount": 2358935
+        },
+        {
+          "label": "Бренд «Pandora» — известный бренд",
+          "factor": 1.1
+        },
+        {
+          "label": "Состояние: Плохое",
+          "factor": 0.85
+        },
+        {
+          "label": "Диапазон ±12 % при уверенности 81 %",
+          "amount": 2210000
+        }
+      ],
+      "warnings": [],
+      "summary": "Предварительная оценка 19 500 ₸ – 24 600 ₸, уверенность высокая (81 %)."
+    }
+  ],
+  "quote": {
+    "input": {
+      "amount": 12000000,
+      "bp": 25,
+      "term": 30,
+      "start": "2026-11-06"
+    },
+    "interest": 900000,
+    "total_to_repay": 12900000,
+    "due_date": "2026-12-06",
+    "grace_until": "2027-01-05",
+    "annual_rate_percent": 91.25,
+    "schedule": [
+      {
+        "day": 1,
+        "date": "2026-11-07",
+        "interest": 30000,
+        "total": 12030000,
+        "is_due_date": false
+      },
+      {
+        "day": 7,
+        "date": "2026-11-13",
+        "interest": 210000,
+        "total": 12210000,
+        "is_due_date": false
+      },
+      {
+        "day": 14,
+        "date": "2026-11-20",
+        "interest": 420000,
+        "total": 12420000,
+        "is_due_date": false
+      },
+      {
+        "day": 21,
+        "date": "2026-11-27",
+        "interest": 630000,
+        "total": 12630000,
+        "is_due_date": false
+      },
+      {
+        "day": 28,
+        "date": "2026-12-04",
+        "interest": 840000,
+        "total": 12840000,
+        "is_due_date": false
+      },
+      {
+        "day": 30,
+        "date": "2026-12-06",
+        "interest": 900000,
+        "total": 12900000,
+        "is_due_date": true
+      }
+    ]
+  },
+  "terms": [
+    {
+      "input": {
+        "market_value": 15000000,
+        "ltv_percent": 90,
+        "daily_rate_bp": 30,
+        "term_days": 90
+      },
+      "errors": [
+        ["ltv_percent", "Золото: доля от оценки от 1 до 80 %"],
+        ["daily_rate_bp", "Золото: ставка от 0,01 % в день до 0,25 % в день"],
+        ["term_days", "Золото: срок от 7 до 60 дней"]
+      ]
+    },
+    {
+      "input": {
+        "market_value": 15000000,
+        "ltv_percent": 80,
+        "daily_rate_bp": 25,
+        "term_days": 30,
+        "loan_amount": 12000050
+      },
+      "errors": [["loan_amount", "Не больше 120 000 ₸ (80 % от 150 000 ₸)"]]
+    },
+    {
+      "input": {
+        "market_value": 15000000,
+        "ltv_percent": 80,
+        "daily_rate_bp": 25,
+        "term_days": 30,
+        "loan_amount": 11999950
+      },
+      "errors": [["loan_amount", "Сумма займа кратна 100 ₸"]]
+    },
+    {
+      "input": {
+        "market_value": 100000,
+        "ltv_percent": 80,
+        "daily_rate_bp": 25,
+        "term_days": 30
+      },
+      "errors": [["market_value", "Сумма займа не меньше 1 000 ₸"]]
+    }
+  ],
+  "loan": {
+    "issued_at": "2026-11-06T09:00:00+00:00",
+    "due_at": "2026-11-13T23:59:59+05:00"
+  },
+  "figures": [
+    {
+      "now": "2026-11-06T12:00:00+00:00",
+      "days_used": 1,
+      "interest": 30000,
+      "total_to_repay": 12030000,
+      "due_date": "2026-11-13",
+      "grace_until": "2026-12-13",
+      "days_left": 7,
+      "overdue_days": 0,
+      "grace_days_left": 37,
+      "phase": "ACTIVE",
+      "due_soon": false
+    },
+    {
+      "now": "2026-11-13T12:00:00+00:00",
+      "days_used": 7,
+      "interest": 210000,
+      "total_to_repay": 12210000,
+      "due_date": "2026-11-13",
+      "grace_until": "2026-12-13",
+      "days_left": 0,
+      "overdue_days": 0,
+      "grace_days_left": 30,
+      "phase": "ACTIVE",
+      "due_soon": true
+    },
+    {
+      "now": "2026-11-14T12:00:00+00:00",
+      "days_used": 8,
+      "interest": 240000,
+      "total_to_repay": 12240000,
+      "due_date": "2026-11-13",
+      "grace_until": "2026-12-13",
+      "days_left": -1,
+      "overdue_days": 1,
+      "grace_days_left": 29,
+      "phase": "OVERDUE",
+      "due_soon": false
+    },
+    {
+      "now": "2026-12-16T12:00:00+00:00",
+      "days_used": 40,
+      "interest": 1200000,
+      "total_to_repay": 13200000,
+      "due_date": "2026-11-13",
+      "grace_until": "2026-12-13",
+      "days_left": -33,
+      "overdue_days": 33,
+      "grace_days_left": 0,
+      "phase": "FORFEIT",
+      "due_soon": false
+    }
+  ],
+  "cards": {
+    "4400 4301 2345 6789": null,
+    "4400 4301 2345 6788": "Проверьте номер карты: похоже, в нём опечатка",
+    "1234": "Номер карты — 16–19 цифр"
+  },
+  "mask": "4400 43** **** 6789",
+  "phones": {
+    "8 701 123 45 67": "+77011234567",
+    "7011234567": "+77011234567"
+  }
+}

@@ -15,7 +15,10 @@
     "design": "node scripts/build-design.mjs",
     "design:check": "node scripts/build-design.mjs --check",
     "typecheck": "tsc -b",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "build:demo": "node scripts/build-demo.mjs",
+    "demo:check": "node scripts/build-demo.mjs --check",
+    "e2e:demo": "playwright test -c playwright.demo.config.ts"
   },
   "dependencies": {
     "@fontsource/golos-text": "^5.3.0",

@@ -1,7 +1,7 @@
 import { type QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
-import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
+import { BrowserRouter, HashRouter, Route, Routes, useLocation } from "react-router-dom";
 import type { Role } from "./api/types";
 import { AuthProvider } from "./auth/AuthContext";
 import { RequireRole } from "./auth/RequireRole";
@@ -26,6 +26,8 @@ import { LandingPage } from "./pages/landing/LandingPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { createQueryClient } from "./lib/queryClient";
 import { ROUTER_FUTURE } from "./lib/router";
+import { DemoBar } from "./demo/DemoBar";
+import { IS_DEMO } from "./demo/isDemo";
 
 const ROLES: Role[] = ["CLIENT", "EXPERT", "COURIER", "ADMIN"];
 
@@ -54,14 +56,14 @@ const EXTRA_ROUTES: Partial<Record<Role, { path: string; element: ReactNode }[]>
 
 /** Прокрутка: к якорю (`/#faq`) или в начало при смене страницы. */
 function ScrollManager() {
-  const { pathname, hash } = useLocation();
+  const { pathname, hash, key } = useLocation();
   useEffect(() => {
     if (hash) {
       document.getElementById(hash.slice(1))?.scrollIntoView();
       return;
     }
     window.scrollTo(0, 0);
-  }, [pathname, hash]);
+  }, [pathname, hash, key]);
   return null;
 }
 
@@ -115,14 +117,21 @@ export function Providers({ children, client }: { children: ReactNode; client: Q
   );
 }
 
+/**
+ * Демо-версия открывается из file://: путь страницы там не поменять, поэтому маршрут
+ * хранится после `#` (`index.html#/client`).
+ */
+const Router = IS_DEMO ? HashRouter : BrowserRouter;
+
 export function App() {
   const [queryClient] = useState(createQueryClient);
   return (
     <Providers client={queryClient}>
-      <BrowserRouter future={ROUTER_FUTURE}>
+      <Router future={ROUTER_FUTURE}>
+        {IS_DEMO && <DemoBar />}
         <ScrollManager />
         <AppRoutes />
-      </BrowserRouter>
+      </Router>
     </Providers>
   );
 }

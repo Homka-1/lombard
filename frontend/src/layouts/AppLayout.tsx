@@ -6,6 +6,7 @@ import { useAuth } from "../auth/AuthContext";
 import { ROLE_LABEL, ROLE_NAV, homePath } from "../auth/roles";
 import { Logo } from "../components/ui/Brand";
 import { Icon } from "../components/ui/Icon";
+import { SkipLink } from "../components/ui/SkipLink";
 import { useToast } from "../components/ui/Toast";
 import { initials } from "../lib/format";
 import styles from "./AppLayout.module.css";
@@ -101,9 +102,7 @@ export function AppLayout() {
   const nav = ROLE_NAV[user.role];
   return (
     <div className={styles.shell}>
-      <a className="skip-link" href="#main">
-        К содержанию
-      </a>
+      <SkipLink />
       <header className={styles.header}>
         <div className={`container ${styles.bar}`}>
           <Logo to={homePath(user.role)} />

@@ -5,6 +5,7 @@ import { homePath } from "../auth/roles";
 import { Logo } from "../components/ui/Brand";
 import { ButtonLink } from "../components/ui/Button";
 import { Icon } from "../components/ui/Icon";
+import { SkipLink } from "../components/ui/SkipLink";
 import styles from "./PublicLayout.module.css";
 
 const NAV = [
@@ -50,9 +51,9 @@ export function PublicHeader() {
         <Logo />
         <nav className={styles.nav} aria-label="Разделы страницы">
           {NAV.map((n) => (
-            <a key={n.href} href={n.href}>
+            <Link key={n.href} to={n.href}>
               {n.label}
-            </a>
+            </Link>
           ))}
         </nav>
         <div className={styles.actions}>
@@ -73,9 +74,9 @@ export function PublicHeader() {
         <div id="mobile-menu" className={styles.mobileMenu}>
           <nav aria-label="Разделы страницы">
             {NAV.map((n) => (
-              <a key={n.href} href={n.href} onClick={() => setOpen(false)}>
+              <Link key={n.href} to={n.href} onClick={() => setOpen(false)}>
                 {n.label}
-              </a>
+              </Link>
             ))}
           </nav>
           <div className={styles.mobileActions}>
@@ -97,10 +98,11 @@ function Footer() {
         </div>
         <nav aria-label="Клиентам" className={styles.footerCol}>
           <h2>Клиентам</h2>
-          <a href="/#how">Как это работает</a>
-          <a href="/#calculator">Калькулятор</a>
-          <a href="/#accepted">Что принимаем</a>
-          <a href="/#faq">Вопросы</a>
+          {NAV.map((n) => (
+            <Link key={n.href} to={n.href}>
+              {n.label}
+            </Link>
+          ))}
         </nav>
         <div className={styles.footerCol}>
           <h2>Кабинет</h2>
@@ -125,9 +127,7 @@ function Footer() {
 export function PublicLayout() {
   return (
     <div className={styles.shell}>
-      <a className="skip-link" href="#main">
-        К содержанию
-      </a>
+      <SkipLink />
       <PublicHeader />
       <main id="main" className={styles.main}>
         <Outlet />

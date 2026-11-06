@@ -13,6 +13,8 @@ interface AuthValue {
   login: (email: string, password: string) => Promise<User>;
   register: (data: RegisterInput) => Promise<User>;
   logout: () => void;
+  /** Принять готовую сессию (ответ входа) — переключатель ролей демо-версии. */
+  adopt: (resp: AuthResponse) => User;
 }
 
 const AuthContext = createContext<AuthValue | null>(null);
@@ -77,8 +79,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [queryClient]);
 
   const value = useMemo(
-    () => ({ status, user, login, register, logout }),
-    [status, user, login, register, logout],
+    () => ({ status, user, login, register, logout, adopt: accept }),
+    [status, user, login, register, logout, accept],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

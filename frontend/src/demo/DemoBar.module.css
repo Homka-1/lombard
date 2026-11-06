@@ -1,0 +1,192 @@
+/*
+ * Панель демо-режима: тёмная полоса над сайтом — служебная, не часть макета.
+ * Малахит 950 + золото 300: та же палитра, но видно, что это «пульт», а не страница.
+ */
+.bar {
+  position: relative;
+  z-index: 30;
+  background: var(--color-malachite-950);
+  color: var(--color-malachite-100);
+  font: var(--type-small);
+}
+
+.inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-6);
+  min-height: 48px;
+  padding-block: var(--space-2);
+}
+
+.badge {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.mark {
+  font: var(--type-hallmark);
+  font-size: 15px;
+  line-height: 20px;
+  letter-spacing: var(--type-hallmark-tracking);
+  color: var(--color-gold-300);
+  padding: 1px var(--space-2);
+  border: 1px solid var(--color-gold-500);
+  border-radius: var(--radius-xs);
+}
+
+.note {
+  color: var(--color-malachite-300);
+}
+
+.roles,
+.timeButtons {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.role,
+.tool,
+.toggle,
+.reset {
+  min-height: 32px;
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--color-malachite-700);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-white);
+  font: var(--type-small-strong);
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background-color var(--motion-fast) var(--motion-easing),
+    border-color var(--motion-fast) var(--motion-easing);
+}
+
+.role:not([aria-pressed="true"]):hover:not(:disabled),
+.tool:hover:not(:disabled),
+.toggle:hover {
+  border-color: var(--color-malachite-300);
+  background: var(--color-malachite-900);
+}
+
+.role[aria-pressed="true"] {
+  background: var(--color-gold-300);
+  border-color: var(--color-gold-300);
+  color: var(--color-malachite-950);
+}
+
+.role:disabled,
+.tool:disabled,
+.reset:disabled {
+  cursor: progress;
+  opacity: 0.7;
+}
+
+.role:focus-visible,
+.tool:focus-visible,
+.toggle:focus-visible,
+.reset:focus-visible {
+  outline: var(--border-focus) solid var(--color-gold-300);
+  outline-offset: 2px;
+}
+
+.toggle {
+  display: none;
+}
+
+.chevron {
+  transition: transform var(--motion-fast) var(--motion-easing);
+}
+
+.toggle[aria-expanded="true"] .chevron {
+  transform: rotate(180deg);
+}
+
+.tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  margin-left: auto;
+}
+
+.date {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.dateLabel {
+  color: var(--color-malachite-300);
+}
+
+.reset {
+  border-color: transparent;
+  color: var(--color-gold-300);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  padding-inline: var(--space-2);
+}
+
+.reset[data-confirm="true"] {
+  background: var(--color-danger-100);
+  color: var(--color-danger-700);
+  text-decoration: none;
+  white-space: normal;
+}
+
+/* Телефон: на виду только роли, время и сброс — по кнопке. */
+@media (max-width: 1023px) {
+  .note {
+    display: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .inner {
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    min-height: 44px;
+  }
+
+  /* Метка «Демо» сама открывает время и сброс. */
+  .badge {
+    display: none;
+  }
+
+  .toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding-inline: var(--space-2) var(--space-1);
+    border-color: var(--color-gold-500);
+    border-radius: var(--radius-xs);
+    color: var(--color-gold-300);
+    font: var(--type-hallmark);
+    font-size: 14px;
+    line-height: 20px;
+    letter-spacing: var(--type-hallmark-tracking);
+  }
+
+  .roles {
+    gap: 4px;
+  }
+
+  .role {
+    padding-inline: 6px;
+    font-size: 13px;
+  }
+
+  .tools {
+    display: none;
+    width: 100%;
+    margin-left: 0;
+    padding-bottom: var(--space-1);
+  }
+
+  .tools[data-open="true"] {
+    display: flex;
+  }
+}

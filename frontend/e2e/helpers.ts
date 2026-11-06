@@ -118,9 +118,11 @@ export async function audit(page: Page) {
   await page.waitForLoadState("networkidle");
   await expect(page.locator('[aria-busy="true"]')).toHaveCount(0);
   await expect(page.getByRole("status", { name: "Загрузка" })).toHaveCount(0);
-  const result = await new AxeBuilder({ page })
-    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
-    .analyze();
+  const builder = new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]);
+  // With file:// (the demo) axe cannot re-download stylesheets via XHR (CORS) and logs
+  // console errors; computed styles are enough for the rules we run.
+  if (page.url().startsWith("file:")) builder.options({ preload: false });
+  const result = await builder.analyze();
   const summary = result.violations.map(
     (v) =>
       `${v.id} (${v.impact}): ${v.help}\n` +
